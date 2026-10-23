@@ -11,7 +11,7 @@ async function once(url) {
   const wait = last + GAP - Date.now();
   if (wait > 0) await sleep(wait);
   try {
-    return await fetchJSON(url, { timeout: 20000 });
+    return await fetchJSON(url, { timeout: 30000 });
   } finally {
     last = Date.now();
   }

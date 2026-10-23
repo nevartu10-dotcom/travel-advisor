@@ -261,7 +261,8 @@ function loadAll(card) {
     async () => {
       const c = await countryP.catch(() => null);
       const name = c?.name || card.countryName;
-      return { items: await getNews(name, { countryCode: card.countryCode, city: card.city, region: card.region }), name };
+      const { items, source } = await getNews(name, { countryCode: card.countryCode, city: card.city, region: card.region });
+      return { items, source, name };
     },
     renderNews
   );
@@ -366,13 +367,13 @@ function renderSights(list, card) {
     <p class="source">From Wikipedia, ranked by how many people read about each place in the last 30 days, within 10 km. Tap a name to read more.</p>`;
 }
 
-function renderNews({ items, name }) {
+function renderNews({ items, name, source }) {
   if (!items.length) return `<p class="muted">No English-language headlines about ${esc(name)} in the last three days. <a href="${newsSearchUrl(name)}" target="_blank" rel="noopener">Search Google News</a></p>`;
   return `
     <ul class="news">
       ${items.map((n) => `<li><a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.title)}</a><small>${esc(n.domain || '')}</small></li>`).join('')}
     </ul>
-    <p class="source">English-language coverage from the last three days, via GDELT. <a href="${newsSearchUrl(name)}" target="_blank" rel="noopener">More on Google News</a></p>`;
+    <p class="source">English-language headlines from the last three days, via ${esc(source)}. <a href="${newsSearchUrl(name)}" target="_blank" rel="noopener">More on Google News</a></p>`;
 }
 
 function renderHolidays(h, card) {

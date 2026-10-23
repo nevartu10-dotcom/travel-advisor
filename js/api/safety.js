@@ -11,7 +11,8 @@
 // Recent safety-related headlines (GDELT) are offered separately as context. They are
 // not turned into a score: news over-reports bad events, so a score would mislead.
 import { fetchJSON, limitWords, countWords, remember } from './http.js';
-import { gdelt, cleanTitle, headlineMatcher } from './gdelt.js';
+import { headlineMatcher } from './gdelt.js';
+import { searchNews } from './news.js';
 
 /* ---------- Wikivoyage ---------- */
 
@@ -153,17 +154,13 @@ export function getSafetyHeadlines(city, countryName, { countryCode, region } = 
   return remember(`safetynews:${city}:${countryName}`, async () => {
     const isAbout = headlineMatcher({ countryName, countryCode, city, region });
     const place = city && city !== countryName ? `("${city}" OR "${countryName}")` : `"${countryName}"`;
-    const data = await gdelt({ query: `${place} ${SAFETY_TERMS} sourcelang:english`, maxrecords: '75', sort: 'hybridrel', timespan: '7d' });
-    const seen = new Set();
-    const items = [];
-    for (const a of data?.articles || []) {
-      const title = cleanTitle(a.title);
-      const key = title.toLowerCase().slice(0, 60);
-      if (!title || seen.has(key) || countWords(title) < 4 || !isAbout(title)) continue;
-      seen.add(key);
-      items.push({ title: limitWords(title, 25), url: a.url, domain: a.domain });
-      if (items.length === 3) break;
-    }
-    return items;
+    const { items } = await searchNews({
+      google: `${place} ${SAFETY_TERMS} when:7d`,
+      gdeltQuery: `${place} ${SAFETY_TERMS}`,
+      timespan: '7d',
+      isAbout,
+      max: 3,
+    });
+    return items.map((it) => ({ ...it, title: limitWords(it.title, 25) }));
   });
 }
