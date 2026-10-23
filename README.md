@@ -33,6 +33,18 @@ Each card shows:
 - For offline use while travelling, the service worker keeps the app itself, map tiles you've viewed, and the most recent answer from each service. Fresh data is always tried first.
 - Languages, plug types and phrases are stable reference data, so they ship with the app instead of being fetched. (restcountries.com, used at first, now requires a private API key, which can't be kept secret in a web app.)
 
+## Backup and restore
+
+Tap the cloud icon in the top bar.
+
+- **Save backup file** downloads all trips and notes as a `.json` file (Downloads on Android, Files on iPhone).
+- **Send backup to Drive, email…** (on phones that support it) hands the file to another app.
+- **Restore from backup file** adds the trips from a file; trips already on the phone with the same ID are replaced by the file's version, so restoring twice doesn't create duplicates.
+- The trips list shows a reminder when there are changes since the last backup.
+- The app asks the browser to keep its data when the phone runs low on storage.
+
+No web app can survive **Clear browsing data**: that deletes everything sites have stored. Keep a backup file outside the browser to be safe, and use it to move trips to a new phone.
+
 ## Known limitations
 
 - **Restaurants** are ranked by how notable they are in OpenStreetMap and distance; OSM has no ratings, so tap a name to see reviews in Google Maps. **Sights** depend on Wikipedia coverage, so small towns may show few.

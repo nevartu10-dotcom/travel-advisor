@@ -226,6 +226,45 @@ def main():
         check(pg.input_value('#f-country') == 'Portugal', 'map tap pre-fills country + city')
         pg.click('#form-sheet [data-close]')
 
+        # Backup: reminder, save file, wipe all data, restore
+        pg.click('#detail [data-close]') if pg.evaluate("document.querySelector('#detail-sheet').open") else None
+        pg.click('#tab-list')
+        check(pg.locator('.backup-nudge').count() == 1, 'list reminds to back up unsaved trips')
+        pg.click('.backup-nudge'); pg.wait_for_selector('#backup-sheet[open]')
+        check('1 trip on this phone' in pg.inner_text('#backup-status') and 'Not backed up yet' in pg.inner_text('#backup-status'), 'backup sheet shows trip count and status')
+        if SHOTS: pg.screenshot(path=SHOTS / '14-backup.png')
+        with pg.expect_download() as dl:
+            pg.click('#backup-save')
+        path = dl.value.path(); backup = json.loads(open(path).read())
+        check(backup['format'] == 'travel-advisor-backup' and len(backup['cards']) == 1 and 'Bring sunscreen' in backup['cards'][0].get('notes', ''), 'backup file contains trips and notes')
+        check(dl.value.suggested_filename.startswith('travel-advisor-backup-'), 'backup file name')
+        check('Last backup' in pg.inner_text('#backup-status'), 'last backup time shown')
+        pg.click('#backup-sheet [data-close]'); pg.wait_for_function("() => !document.querySelector('#backup-sheet').open")
+        check(pg.locator('.backup-nudge').count() == 0, 'reminder disappears after backing up')
+        # Simulate "Clear browsing data"
+        pg.evaluate('() => localStorage.clear()'); pg.reload(); pg.click('#tab-list')
+        check(pg.locator('.ticket').count() == 0 and pg.locator('.empty [data-restore]').count() == 1, 'after clearing data the empty screen offers restore')
+        pg.click('.empty [data-restore]'); pg.wait_for_selector('#backup-sheet[open]')
+        bad = pathlib.Path(path).with_name('not-a-backup.json'); bad.write_text('{"hello": 1}')
+        pg.set_input_files('#backup-file', str(bad))
+        pg.wait_for_function("() => document.querySelector('#toast').textContent.includes('isn’t a Travel Advisor backup')")
+        check(True, 'wrong file is rejected with a clear message')
+        pg.set_input_files('#backup-file', path)
+        pg.wait_for_function("() => document.querySelector('#toast').textContent.includes('1 added')")
+        pg.click('#backup-sheet [data-close]'); pg.wait_for_function("() => !document.querySelector('#backup-sheet').open")
+        check(pg.locator('.ticket').count() == 1 and pg.inner_text('.ticket-city') == 'Family summer holiday', 'restore brings the trip back')
+        pg.set_input_files('#backup-file', path) if False else None
+        pg.click('.ticket'); pg.wait_for_selector('#detail-sheet[open]')
+        check('Bring sunscreen' in pg.input_value('#d-notes'), 'restore brings the notes back')
+        pg.click('#detail [data-close]'); pg.wait_for_function("() => !document.querySelector('#detail-sheet').open")
+        check(pg.locator('.backup-nudge').count() == 0, 'no reminder right after restoring a backup')
+        pg.click('#backup-btn'); pg.wait_for_selector('#backup-sheet[open]')
+        pg.set_input_files('#backup-file', path)
+        pg.wait_for_function("() => document.querySelector('#toast').textContent.includes('1 updated')")
+        check(pg.locator('.ticket').count() == 1, 'restoring the same backup twice doesn’t duplicate trips')
+        pg.click('#backup-sheet [data-close]'); pg.wait_for_function("() => !document.querySelector('#backup-sheet').open")
+        pg.click('#tab-map'); pg.wait_for_selector('.pin')
+
         # Rename from the card, then clear the name
         pg.click('#tab-list'); pg.click('.ticket')
         pg.wait_for_selector('#detail-sheet[open]')

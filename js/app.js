@@ -1,11 +1,12 @@
 // App entry: tabs, list rendering, wiring.
-import { getCards, onChange } from './store.js';
+import { getCards, onChange, setMeta } from './store.js';
 import { initMap, renderPins, refreshSize, focusCard, fitAll, showPlace } from './map.js';
 import { searchPlace } from './api/geocode.js';
+import { downloadBackup, shareBackup, canShareFiles, restoreFrom, requestPersistence, needsBackup, lastBackupText } from './backup.js';
 import { initForm, openForm } from './form.js';
 import { initDetail, openDetail } from './detail.js';
 import { flagEmoji } from './api/country.js';
-import { esc, dateRange, countdown, isPast, toast, tripTitle } from './ui.js';
+import { esc, dateRange, countdown, isPast, toast, tripTitle, openSheet, closeSheet } from './ui.js';
 
 const $ = (id) => document.getElementById(id);
 let view = 'map';
@@ -33,8 +34,10 @@ function renderList(cards) {
       <h2>Where are you going?</h2>
       <p>Add a trip and get the language, weather, plugs, safety, food, sights, news, holidays and key phrases for the place in one card.</p>
       <button class="btn btn-primary" type="button" data-add>Add your first trip</button>
+      <br><button class="btn btn-quiet" type="button" data-restore>Restore trips from a backup</button>
     </div>`;
     root.querySelector('[data-add]').addEventListener('click', () => openForm());
+    root.querySelector('[data-restore]').addEventListener('click', openBackup);
     return;
   }
   const upcoming = cards.filter((c) => !isPast(c));
@@ -51,7 +54,14 @@ function renderList(cards) {
           )
           .join('')}</ul></div>`
       : '';
-  root.innerHTML = group('Upcoming', upcoming) + group('Past trips', past);
+  const nudge = needsBackup()
+    ? `<button class="backup-nudge" type="button" data-backup>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4m0 3h.01M10.3 4.3 2.6 18a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0Z"/></svg>
+        <span>Some trips aren’t backed up. Save a backup so you don’t lose them if browsing data is cleared.</span>
+      </button>`
+    : '';
+  root.innerHTML = nudge + group('Upcoming', upcoming) + group('Past trips', past);
+  root.querySelector('[data-backup]')?.addEventListener('click', openBackup);
 }
 
 function render() {
@@ -59,6 +69,72 @@ function render() {
   renderList(cards);
   renderPins(cards);
   $('map-hint').textContent = cards.length ? 'Tap a pin to open its card.' : 'Search above, or tap the map to plan a trip.';
+}
+
+/* ---------- Backup ---------- */
+
+let persistState = 'unsupported';
+
+function refreshBackupSheet() {
+  const n = getCards().length;
+  $('backup-status').textContent = `${n} trip${n === 1 ? '' : 's'} on this phone. ${lastBackupText()}`;
+  $('backup-save').disabled = $('backup-share').disabled = n === 0;
+  $('persist-status').textContent = {
+    granted: 'This browser has agreed to keep the app’s data even when the phone runs low on storage.',
+    denied: 'This browser may delete the app’s data if the phone runs low on storage. Keep a backup.',
+    unsupported: 'Keep a backup: this browser doesn’t say whether it will keep the app’s data.',
+  }[persistState];
+}
+
+function openBackup() {
+  refreshBackupSheet();
+  openSheet($('backup-sheet'));
+}
+
+function initBackup() {
+  const sheet = $('backup-sheet');
+  sheet.querySelector('[data-close]').addEventListener('click', () => closeSheet(sheet));
+  sheet.addEventListener('cancel', (e) => {
+    e.preventDefault();
+    closeSheet(sheet);
+  });
+  $('backup-btn').addEventListener('click', openBackup);
+  $('backup-share').hidden = !canShareFiles();
+  $('backup-save').addEventListener('click', () => {
+    downloadBackup();
+    refreshBackupSheet();
+    render();
+    toast('Backup file saved to your downloads');
+  });
+  $('backup-share').addEventListener('click', async () => {
+    try {
+      await shareBackup();
+      refreshBackupSheet();
+      render();
+    } catch (err) {
+      if (err.name !== 'AbortError') toast(`Couldn’t share the backup: ${err.message}`);
+    }
+  });
+  $('backup-restore').addEventListener('click', () => $('backup-file').click());
+  $('backup-file').addEventListener('change', async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    const wasBackedUp = !needsBackup();
+    try {
+      const { added, updated, skipped } = await restoreFrom(file);
+      // If nothing here was unsaved before, what's here now matches a backup.
+      if (wasBackedUp) setMeta({ lastBackup: Date.now() });
+      const parts = [added && `${added} added`, updated && `${updated} updated`, skipped && `${skipped} skipped (incomplete)`].filter(Boolean);
+      toast(`Trips restored: ${parts.join(', ')}`);
+      refreshBackupSheet();
+      render();
+      fitAll(getCards());
+    } catch (err) {
+      toast(err.message);
+    }
+  });
+  requestPersistence().then((s) => (persistState = s));
 }
 
 let results = [];
@@ -112,6 +188,7 @@ function start() {
     },
   });
   initDetail({ deleted: (card) => toast(`Trip to ${card.city} deleted`) });
+  initBackup();
 
   document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => setView(t.dataset.view)));
   document.querySelector('.tabbar').addEventListener('keydown', (e) => {

@@ -20,7 +20,12 @@
 <body>
   <header class="appbar">
     <h1 class="appbar-title" id="appbar-title">Trips</h1>
-    <span class="appbar-status" id="net-status" hidden>Offline</span>
+    <span class="appbar-actions">
+      <span class="appbar-status" id="net-status" hidden>Offline</span>
+      <button class="icon-btn" id="backup-btn" type="button" aria-label="Back up or restore trips">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18a4.5 4.5 0 0 1-.6-9 6 6 0 0 1 11.4 1.5A3.75 3.75 0 0 1 17.5 18H7Z"/><path d="M12 15V10m0 0-2.2 2.2M12 10l2.2 2.2"/></svg>
+      </button>
+    </span>
   </header>
 
   <main>
@@ -101,6 +106,29 @@
   <!-- Trip card detail -->
   <dialog class="sheet sheet-detail" id="detail-sheet" aria-labelledby="d-city">
     <div class="sheet-inner" id="detail"></div>
+  </dialog>
+
+  <!-- Backup and restore -->
+  <dialog class="sheet sheet-small" id="backup-sheet" aria-labelledby="backup-title">
+    <div class="sheet-inner">
+      <div class="sheet-head">
+        <button class="icon-btn" type="button" data-close aria-label="Close">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+        <h2 id="backup-title">Backup and restore</h2>
+      </div>
+      <div class="sheet-body backup-body">
+        <p>Your trips and notes are stored only in this browser on this phone. <strong>Clearing browsing data deletes them</strong>, and they don’t move to a new phone by themselves. A backup file keeps them safe.</p>
+        <p class="backup-status" id="backup-status"></p>
+        <button class="btn btn-primary" type="button" id="backup-save">Save backup file</button>
+        <button class="btn btn-quiet" type="button" id="backup-share" hidden>Send backup to Drive, email…</button>
+        <h3>Restore</h3>
+        <p class="muted">Choose a backup file. Its trips are added to the ones already here; trips that are in both are replaced by the version in the file.</p>
+        <button class="btn btn-quiet" type="button" id="backup-restore">Restore from backup file</button>
+        <input type="file" id="backup-file" accept=".json,application/json" hidden>
+        <p class="source" id="persist-status"></p>
+      </div>
+    </div>
   </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
