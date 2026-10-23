@@ -8,6 +8,7 @@ import { getRestaurants, getSights } from './api/places.js';
 import { getNews, newsSearchUrl } from './api/news.js';
 import { rankLanguages, getPhrases, PHRASE_KEYS, PHRASE_LABELS } from './api/phrases.js';
 import { plugInfo, PLUG_TYPES, HOME } from './data/plugs.js';
+import { plugArt } from './data/plug-art.js';
 import { forget } from './api/http.js';
 import { tripTitle, esc, dateRange, tripLength, countdown, weekday, dayMonth, km, openSheet, closeSheet, confirmDialog, toast } from './ui.js';
 
@@ -244,8 +245,9 @@ function renderPlugs(p) {
   if (!p) return '<p class="muted">No plug information for this country.</p>';
   return `
     <div class="plugs">
-      ${p.types.map((t) => `<div class="plug"><span class="plug-letter" aria-hidden="true">${t}</span><span><strong>Type ${t}</strong><br><small>${esc(PLUG_TYPES[t])}</small></span></div>`).join('')}
+      ${p.types.map((t) => `<div class="plug">${plugArt(t)}<span><strong>Type ${t}</strong><br><small>${esc(PLUG_TYPES[t])}</small></span></div>`).join('')}
     </div>
+    <p class="source plug-note">Plugs shown from the front, pins facing you. Not to scale.</p>
     <p class="verdict ${p.homePlugsFit ? 'ok' : 'warn'}">${p.homePlugsFit
       ? `✓ Plugs from ${HOME.name} (C/F) fit here.`
       : `⚠ Plugs from ${HOME.name} (C/F) don’t fit. Bring a travel adapter.`}</p>

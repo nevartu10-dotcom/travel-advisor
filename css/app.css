@@ -323,8 +323,13 @@ main {
 
 /* Plugs */
 .plugs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
-.plug { display: grid; grid-template-columns: 48px 1fr; gap: 10px; align-items: center; flex: 1 1 260px; background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 10px; }
-.plug-letter { width: 48px; height: 48px; border-radius: 50%; border: 2px solid var(--ink); display: grid; place-items: center; font-size: var(--step-2); font-weight: 800; }
+.plug { display: grid; grid-template-columns: 64px 1fr; gap: 10px; align-items: center; flex: 1 1 260px; background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 10px; }
+.plug-art { width: 64px; height: 64px; display: block; }
+.plug-art .pa-body { fill: var(--paper); stroke: var(--ink); stroke-width: 2.5; stroke-linejoin: round; }
+.plug-art .pa-pin { fill: var(--ink); stroke: none; }
+.plug-art .pa-hole { fill: var(--surface); stroke: var(--ink); stroke-width: 2; }
+.plug-fallback { width: 56px; height: 56px; border-radius: 50%; border: 2px solid var(--ink); display: grid; place-items: center; font-size: var(--step-2); font-weight: 800; }
+.plug-note { margin: -4px 0 10px !important; }
 .plug small { color: var(--slate); }
 .verdict { display: flex; gap: 8px; align-items: flex-start; font-weight: 500; }
 .verdict.ok { color: var(--ok); }
