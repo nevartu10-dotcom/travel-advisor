@@ -5,7 +5,7 @@ import { searchPlace } from './api/geocode.js';
 import { initForm, openForm } from './form.js';
 import { initDetail, openDetail } from './detail.js';
 import { flagEmoji } from './api/country.js';
-import { esc, dateRange, countdown, isPast, toast } from './ui.js';
+import { esc, dateRange, countdown, isPast, toast, tripTitle } from './ui.js';
 
 const $ = (id) => document.getElementById(id);
 let view = 'map';
@@ -45,7 +45,7 @@ function renderList(cards) {
           .map(
             (c) => `<li><button class="ticket${isPast(c) ? ' past' : ''}" type="button" data-id="${esc(c.id)}">
               <span class="ticket-flag" aria-hidden="true">${flagEmoji(c.countryCode)}</span>
-              <span class="ticket-main"><span class="ticket-city">${esc(c.city)}</span><span class="ticket-meta">${esc(c.countryName)}, ${dateRange(c.arrival, c.departure)}</span></span>
+              <span class="ticket-main"><span class="ticket-city">${esc(tripTitle(c))}</span><span class="ticket-meta">${c.name ? `${esc(c.city)}, ` : ''}${esc(c.countryName)}, ${dateRange(c.arrival, c.departure)}</span></span>
               <span class="ticket-when">${countdown(c)}</span>
             </button></li>`
           )
@@ -106,7 +106,7 @@ function start() {
   initMap({ onOpenCard: openDetail, onAddAt: (lat, lon) => openForm({ lat, lon }) });
   initForm({
     created: (card) => {
-      toast(`Trip to ${card.city} added`);
+      toast(`${card.name ? `“${card.name}”` : `Trip to ${card.city}`} added`);
       if (view === 'map') focusCard(card);
       openDetail(card.id);
     },

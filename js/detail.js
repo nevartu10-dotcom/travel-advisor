@@ -1,5 +1,5 @@
 // Trip card: header + nine advisory topics, each loaded independently.
-import { getCard, deleteCard } from './store.js';
+import { getCard, deleteCard, updateCard } from './store.js';
 import { getCountry, flagEmoji } from './api/country.js';
 import { getWeather } from './api/weather.js';
 import { getHolidays } from './api/holidays.js';
@@ -9,7 +9,7 @@ import { getNews, newsSearchUrl } from './api/news.js';
 import { rankLanguages, getPhrases, PHRASE_KEYS, PHRASE_LABELS } from './api/phrases.js';
 import { plugInfo, PLUG_TYPES, HOME } from './data/plugs.js';
 import { forget } from './api/http.js';
-import { esc, dateRange, tripLength, countdown, weekday, dayMonth, km, openSheet, closeSheet, confirmDialog, toast } from './ui.js';
+import { tripTitle, esc, dateRange, tripLength, countdown, weekday, dayMonth, km, openSheet, closeSheet, confirmDialog, toast } from './ui.js';
 
 const sheet = () => document.getElementById('detail-sheet');
 let current = null;
@@ -45,13 +45,14 @@ export function openDetail(id) {
       <button class="icon-btn" type="button" data-close aria-label="Close">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
       </button>
-      <span class="bar-title" aria-hidden="true">${esc(card.city)}</span>
+      <span class="bar-title" aria-hidden="true">${esc(tripTitle(card))}</span>
       <button class="icon-btn" type="button" data-refresh aria-label="Refresh information">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6"/></svg>
       </button>
     </div>
     <div class="detail-head">
       <div class="detail-title">
+        <div class="trip-name" id="d-name"></div>
         <h2 id="d-city">${esc(card.city)}</h2>
         <p class="detail-country">${flagEmoji(card.countryCode)} ${esc([card.region !== card.city ? card.region : '', card.countryName].filter(Boolean).join(', '))}</p>
         <p class="detail-dates"><span>${dateRange(card.arrival, card.departure)}, ${tripLength(card.arrival, card.departure)}</span><span class="countdown">${countdown(card)}</span></p>
@@ -89,6 +90,8 @@ export function openDetail(id) {
     window.dispatchEvent(new CustomEvent('focus-card', { detail: card }));
   });
 
+  renderName(card);
+
   // Show the city name in the bar once the big title has scrolled away.
   const bar = root.querySelector('.detail-bar');
   new IntersectionObserver(([e]) => bar.classList.toggle('scrolled', !e.isIntersecting), { root, rootMargin: '-56px 0px 0px 0px' })
@@ -97,6 +100,53 @@ export function openDetail(id) {
   openSheet(sheet());
   root.scrollTop = 0;
   loadAll(card);
+}
+
+/* ---------- Trip name ---------- */
+
+function renderName(card) {
+  const box = document.getElementById('d-name');
+  if (!box) return;
+  box.innerHTML = card.name
+    ? `<span class="trip-name-text">${esc(card.name)}</span>
+       <button class="name-btn" type="button" aria-label="Rename trip">
+         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg>
+       </button>`
+    : `<button class="name-btn name-add" type="button">
+         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg>
+         Name this trip
+       </button>`;
+  box.querySelector('.name-btn').addEventListener('click', () => editName(card));
+  const bar = document.querySelector('#detail .bar-title');
+  if (bar) bar.textContent = tripTitle(card);
+}
+
+function editName(card) {
+  const box = document.getElementById('d-name');
+  box.innerHTML = `<form class="name-form">
+      <label class="visually-hidden" for="d-name-input">Trip name</label>
+      <input id="d-name-input" maxlength="60" autocomplete="off" placeholder="e.g. Family summer holiday" value="${esc(card.name || '')}">
+      <button class="name-save" type="submit">Save</button>
+    </form>`;
+  const form = box.querySelector('form');
+  const input = form.querySelector('input');
+  input.focus();
+  input.select();
+  const cancel = () => renderName(card);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+      cancel();
+    }
+  });
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    card.name = input.value.trim();
+    updateCard(card.id, { name: card.name });
+    renderName(card);
+    toast(card.name ? 'Trip name saved' : 'Trip name removed');
+  });
 }
 
 function body(key) {

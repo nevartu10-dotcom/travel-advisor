@@ -139,6 +139,7 @@ async function submit(e) {
     const place = selected || (await find());
     if (!place) return;
     const card = addCard({
+      name: $('f-name').value.trim(),
       city: place.city || place.name,
       address: $('f-place').value.trim(),
       region: place.region,

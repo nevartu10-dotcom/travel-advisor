@@ -27,6 +27,9 @@ function todayLocal() {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
+/** The trip's own name if it has one, otherwise the city. */
+export const tripTitle = (card) => (card.name && card.name.trim()) || card.city;
+
 export function isPast(card) {
   return parse(card.departure) < todayLocal();
 }

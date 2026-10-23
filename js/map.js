@@ -1,7 +1,7 @@
 // Map tab: trip pins, tap-to-add.
 import * as L from '../vendor/leaflet/src/Leaflet.js';
 import { flagEmoji } from './api/country.js';
-import { isPast, dateRange } from './ui.js';
+import { isPast, dateRange, tripTitle, esc } from './ui.js';
 
 let map;
 let pinLayer;
@@ -39,15 +39,15 @@ export function renderPins(cards) {
   for (const c of cards) {
     const icon = L.divIcon({
       className: '',
-      html: `<div class="pin${isPast(c) ? ' past' : ''}"><span>${flagEmoji(c.countryCode)}</span></div>`,
+      html: `<div class="pin-label${isPast(c) ? ' past' : ''}">${esc(tripTitle(c))}</div><div class="pin${isPast(c) ? ' past' : ''}"><span>${flagEmoji(c.countryCode)}</span></div>`,
       iconSize: [40, 40],
       iconAnchor: [20, 48],
     });
     L.marker([c.lat, c.lon], {
       icon,
       cardId: c.id,
-      title: `${c.city}, ${c.countryName}`,
-      alt: `${c.city}, ${c.countryName}, ${dateRange(c.arrival, c.departure)}`,
+      title: c.name ? `${c.name}: ${c.city}, ${c.countryName}` : `${c.city}, ${c.countryName}`,
+      alt: `${tripTitle(c)}, ${c.city}, ${c.countryName}, ${dateRange(c.arrival, c.departure)}`,
       keyboard: true,
     }).addTo(pinLayer);
   }
