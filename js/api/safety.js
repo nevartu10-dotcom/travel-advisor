@@ -8,11 +8,10 @@
 // Canada; shown only if one of them answers (their servers may refuse direct requests
 // from web pages). The section works without them.
 //
-// Recent safety-related headlines (GDELT) are offered separately as context. They are
-// not turned into a score: news over-reports bad events, so a score would mislead.
+// Recent safety-related events (Wikipedia's Current events) are offered separately as
+// context. They are not turned into a score: news over-reports bad events.
 import { fetchJSON, limitWords, countWords, remember } from './http.js';
-import { headlineMatcher } from './gdelt.js';
-import { searchNews } from './news.js';
+import { getSafetyEvents } from './news.js';
 
 /* ---------- Wikivoyage ---------- */
 
@@ -147,21 +146,7 @@ export function getSafety({ countryCode, countryName, countryNames, city, region
   });
 }
 
-const SAFETY_TERMS = '(protest OR strike OR crime OR attack OR shooting OR flood OR wildfire OR earthquake OR storm OR hurricane OR typhoon OR unrest OR evacuation OR outbreak)';
-
-/** Up to 3 recent English-language headlines about safety-related events at the destination. */
+/** Up to 3 recent safety-related events at the destination, from Wikipedia. */
 export function getSafetyHeadlines(city, countryName, { countryCode, region } = {}) {
-  return remember(`safetynews:${city}:${countryName}`, async () => {
-    const isAbout = headlineMatcher({ countryName, countryCode, city, region });
-    const place = city && city !== countryName ? `("${city}" OR "${countryName}")` : `"${countryName}"`;
-    const { items } = await searchNews({
-      google: `${place} ${SAFETY_TERMS} when:7d`,
-      gdeltQuery: `${place} ${SAFETY_TERMS}`,
-      timespan: '7d',
-      isAbout,
-      max: 3,
-      useGdelt: false, // keep GDELT's request allowance for the news section
-    });
-    return items.map((it) => ({ ...it, title: limitWords(it.title, 25) }));
-  });
+  return getSafetyEvents({ countryName, countryCode, city, region });
 }

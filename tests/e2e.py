@@ -14,7 +14,12 @@ ARR = today + datetime.timedelta(days=5)
 DEP = today + datetime.timedelta(days=10)
 HOL = today + datetime.timedelta(days=7)
 FAIL_OVERPASS = [False]
-DOWN = set()  # relays / services to simulate as unreachable
+DOWN = set()  # services to simulate as unreachable
+MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
+_d = datetime.date.today(); _y = _d - datetime.timedelta(days=1)
+CE_TODAY = f'Portal:Current events/{_d.year} {MONTHS[_d.month-1]} {_d.day}'
+CE_YESTERDAY = f'Portal:Current events/{_y.year} {MONTHS[_y.month-1]} {_y.day}'
+WIKI_PAGES = {CE_TODAY: "{{Current events|year=2026|month=10|day=23|content=\n<!-- All news items below this line -->\n'''Armed conflicts and attacks'''\n*[[Kashmir conflict]]\n**Pakistani and Indian troops exchange fire along the Line of Control. [https://www.reuters.com/a (Reuters)]\n'''Disasters and accidents'''\n*[[2026 Portugal wildfires]]\n**A wildfire in central Portugal is brought under control after three days. [https://apnews.com/b (AP)]\n'''Law and crime'''\n*Lisbon police arrest a gang targeting tourists on tram 28. [https://www.publico.pt/c (Público)]\n'''Politics and elections'''\n*[[2026 Pakistani budget]]\n**The Pakistani cabinet approves a new budget amid IMF talks. [https://www.dawn.com/d (Dawn)]\n*The Portuguese parliament approves a housing bill limiting short-term rentals. [https://www.politico.eu/e (Politico)]\n<!-- All news items above this line -->\n}}", CE_YESTERDAY: "{{Current events|content=\n'''Business and economy'''\n*[[Rail transport in Portugal]]\n**Portugal unveils a new high-speed rail timetable between Lisbon and Porto. [https://www.euronews.com/f (Euronews)]\n'''Sports'''\n*Japan wins the Asian volleyball championship final in Tokyo. [https://www.bbc.co.uk/g (BBC)]\n}}", f'{_d.year} in Portugal': 'Intro.\n== Incumbents ==\n* President: someone\n== Events ==\n=== September ===\n* 12 September – An older event that should rank below newer ones in the list.\n=== October ===\n* 2 October – The government announces record tourism numbers for the summer season.\n* 20 October – Metro workers in the capital hold a one-day strike over pay.\n== Deaths ==\n* 1 October – Someone'}
 TILE = base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN89+7dfwAJbgPePoT6KwAAAABJRU5ErkJggg==')
 
 LISBON = {"lat": "38.7077", "lon": "-9.1366", "name": "Lisbon", "display_name": "Lisbon, Lisboa, Portugal",
@@ -50,7 +55,7 @@ def handler(route):
                   {"date": "2001-01-01", "localName": "Old", "name": "Old", "types": ["Public"], "counties": None}])
     if 'cadataapi.state.gov' in url or 'data.international.gc.ca' in url:
         return route.abort()  # what browsers see: these servers refuse requests from web pages
-    if 'en.wikipedia.org' in url:
+    if 'en.wikipedia.org' in url and 'geosearch' in url:
         pages = [
             {"pageid": 1, "title": "Lisbon", "description": "Capital city of Portugal", "coordinates": [{"lat": 38.7077, "lon": -9.1366}], "pageviews": {"d1": 90000}},
             {"pageid": 2, "title": "Belém Tower", "description": "fortified tower in Lisbon", "coordinates": [{"lat": 38.6916, "lon": -9.216}], "pageviews": {"d1": 20000}, "thumbnail": {"source": "https://upload.wikimedia.org/x.jpg"}},
@@ -85,47 +90,16 @@ def handler(route):
                    for i, (n, t) in enumerate([("Castelo de São Jorge", {"historic": "castle", "wikipedia": "pt:Castelo"}), ("Mosteiro dos Jerónimos", {"tourism": "attraction", "wikipedia": "en:Jerónimos Monastery"}),
                                                ("Torre de Belém", {"tourism": "attraction", "wikidata": "Q1"}), ("Miradouro da Graça", {"tourism": "viewpoint"}), ("Museu Gulbenkian", {"tourism": "museum", "wikidata": "Q2"}), ("Some bench", {"tourism": "attraction"})])]
         return j({"elements": els})
-    relay = next((r for r in ('rss2json', 'allorigins', 'codetabs') if r in url), None)
-    if relay:
-        if relay in DOWN:
+    if 'en.wikipedia.org' in url and 'prop=revisions' in url:
+        if 'wiki' in DOWN:
             return route.abort()
-        from urllib.parse import unquote
-        feed = unquote(unquote(url))
-        if 'protest' in feed:
-            items = ["Lisbon metro workers announce strike for next Tuesday - Público", "Karachi protest blocks main road for hours - Dawn",
-                     "Wildfire in central Portugal brought under control overnight - Reuters"]
-        else:
-            items = ["Portugal unveils new high-speed rail timetable between Lisbon and Porto - Reuters",
-                     "Portugal unveils new high-speed rail timetable between Lisbon and Porto - Euronews",
-                     "Lisbon tram strike called off after last-minute agreement with unions - Portugal Resident",
-                     "Short - X",
-                     "Portuguese parliament debates housing bill aimed at short-term rentals - Politico",
-                     "Wildfire season ends early in central Portugal thanks to heavy rains - AP",
-                     "Record October for tourism as visitors keep coming to the country - The Portugal News",
-                     "Another story that should not appear because five are enough - Example"]
-        if relay == 'rss2json':
-            return j({"status": "ok", "items": [{"title": t, "link": f"https://news.google.com/{i}", "pubDate": "2026-10-23"} for i, t in enumerate(items)]})
-        from xml.sax.saxutils import escape
-        xml = '<?xml version="1.0"?><rss><channel>' + ''.join(f'<item><title>{escape(t)}</title><link>https://news.google.com/x{i}</link><source>{escape(t.rsplit(" - ", 1)[-1])}</source></item>' for i, t in enumerate(items)) + '</channel></rss>'
-        return route.fulfill(status=200, content_type='application/xml', body=xml, headers={'Access-Control-Allow-Origin': '*'})
-    if 'gdeltproject' in url and 'gdelt' in DOWN:
-        return route.abort()
-    if 'gdeltproject' in url and 'protest' in url:
-        return j({"articles": [{"title": "Lisbon metro workers announce strike for next Tuesday - Local", "url": "https://news.example/s1", "domain": "news.example"},
-                               {"title": "Karachi protest blocks main road for hours", "url": "https://news.example/s0", "domain": "news.example"},
-                               {"title": "Wildfire in central Portugal brought under control overnight", "url": "https://news.example/s2", "domain": "news.example"}]})
-    if 'gdeltproject' in url:
-        return j({"articles": [{"title": t, "url": f"https://news.example/{i}", "domain": "news.example", "seendate": "20261023T100000Z"} for i, t in enumerate([
-            "Pakistan cabinet approves new budget amid IMF talks - Dawn",
-            "Portugal unveils new high-speed rail timetable between Lisbon and Porto - Reuters",
-            "Imran Khan supporters rally in Islamabad as court delays verdict",
-            "Portugal unveils new high-speed rail timetable between Lisbon and Porto - Reuters",
-            "Lisbon tram strike called off after last-minute agreement with unions",
-            "Short",
-            "Portugal's tourism numbers reach record high for October as visitors keep coming despite rising prices across the country and housing debates intensifying in the capital region every week",
-            "Wildfire season ends early in central Portugal thanks to heavy rains",
-            "Portuguese parliament debates housing bill aimed at short-term rentals",
-            "Extra article that should not appear"])]})
+        from urllib.parse import parse_qs, urlparse
+        titles = parse_qs(urlparse(url).query)['titles'][0].split('|')
+        pages = []
+        for t in titles:
+            text = WIKI_PAGES.get(t)
+            pages.append({"title": t, "revisions": [{"slots": {"main": {"content": text}}}]} if text else {"title": t, "missing": True})
+        return j({"query": {"pages": pages}})
     if 'mymemory' in url:
         return j({"responseData": {"translatedText": "MT"}})
     if 'tile.openstreetmap.org' in url or 'upload.wikimedia.org' in url:
@@ -188,17 +162,18 @@ def main():
         check(not any(x in sights for x in ['Lisbon', 'Baixa', 'Rossio railway station']), 'city, districts and stations filtered out')
         check(pg.locator('[data-topic="sights"] img.sight-img').count() == 1, 'sight photo shown when available')
         news = pg.locator('[data-topic="news"] .news li a').all_inner_texts()
-        check(len(news) == 5, f'5 news headlines (deduped, short ones skipped) {news}')
-        check('via Google News' in pg.inner_text('[data-topic="news"]'), 'news comes from Google News')
-        check('Record October for tourism as visitors keep coming to the country' in news, 'Google results fill the list when a title omits the place name')
-        check('Reuters' in pg.inner_text('[data-topic="news"]'), 'news source name shown')
+        check(len(news) == 5, f'5 news items {news}')
+        check(not any('Pakistan' in n or 'Indian troops' in n or 'Japan' in n for n in news), 'events not about the destination are filtered out')
+        check(news[0].startswith('A wildfire in central Portugal'), 'newest Current events items first')
+        check('Wikipedia' in pg.inner_text('[data-topic="news"]') and 'AP' in pg.inner_text('[data-topic="news"]'), 'source and original outlet shown')
         check(sum(len(n.split()) for n in news) <= 150, f'news ≤ 150 words ({sum(len(n.split()) for n in news)})')
         check('Restauração' in txt and 'Public holiday' in txt, 'holiday during trip shown')
         check('Old' not in pg.inner_text('[data-topic="holidays"]'), 'holiday outside trip hidden')
         check(pg.locator('.numbers li').count() == 10 and 'Obrigado' in txt and 'Bom dia' in txt, 'Portuguese numbers + phrases')
         check(not pg.locator('#detail .error').count(), 'no section errors')
         pg.wait_for_selector('.safety-news h4', timeout=20000)
-        check(pg.locator('.safety-news li').count() == 2 and 'strike' in pg.inner_text('.safety-news') and 'Karachi' not in pg.inner_text('.safety-news'), 'safety headlines shown as context, off-topic ones filtered')
+        sn = pg.inner_text('.safety-news')
+        check(pg.locator('.safety-news li').count() == 3 and 'tram 28' in sn and 'wildfire' in sn and 'Line of Control' not in sn, f'safety events shown as context, off-topic ones filtered: {sn[:200]}')
         if SHOTS:
             pg.screenshot(path=SHOTS / '04-detail-top.png')
             body = pg.locator('#detail')
@@ -288,9 +263,8 @@ def main():
         pg.click('#detail [data-close]')
         pg.wait_for_function("() => !document.querySelector('#detail-sheet').open")
 
-        # Far-future trip -> last-year weather; Overpass down; rss2json down -> second relay
+        # Far-future trips -> last-year weather; Overpass down; news for other cities; Wikipedia down
         FAIL_OVERPASS[0] = True
-        DOWN.add('rss2json')
         far_a = (today + datetime.timedelta(days=60)).isoformat(); far_d = (today + datetime.timedelta(days=64)).isoformat()
         cards = [dict(id=f'c{i}', city=c, region='', countryName='Portugal', countryCode='PT', lat=38.7 + i * 0.3, lon=-9.1, arrival=far_a, departure=far_d) for i, c in enumerate(['Lisbon', 'Porto', 'Faro'])]
         pg.evaluate(f"() => localStorage.setItem('travel-advisor.cards.v1', JSON.stringify({json.dumps(cards)}))")
@@ -305,18 +279,15 @@ def main():
         pg.wait_for_selector('[data-topic="food"] .places li, [data-topic="food"] .error', timeout=30000)
         food = pg.locator('[data-topic="food"] .places li a').all_inner_texts()
         check(len(food) == 5 and all(f.startswith('Fallback') for f in food), f'restaurants fall back to Nominatim when Overpass fails {food}')
-        check('via Google News' in pg.inner_text('[data-topic="news"]') and pg.locator('[data-topic="news"] .news li').count() == 5, 'news uses the second relay when rss2json is down')
 
-        DOWN.update({'allorigins', 'codetabs'})
         open_trip('Porto')
-        gnews = pg.locator('[data-topic="news"] .news li a').all_inner_texts()
-        check('via GDELT' in pg.inner_text('[data-topic="news"]') and len(gnews) == 4, 'news falls back to GDELT when every Google News relay is down (Lisbon-only story dropped for Porto)')
-        check(not any('Pakistan' in n or 'Imran' in n for n in gnews), 'GDELT headlines not about the destination are filtered out')
+        pn = pg.locator('[data-topic="news"] .news li a').all_inner_texts()
+        check(len(pn) >= 4 and not any('tram 28' in n for n in pn), f'Porto trip keeps Portugal-wide events but drops Lisbon-only ones {pn}')
 
-        DOWN.add('gdelt')
+        DOWN.add('wiki')
+        pg.reload()
         open_trip('Faro')
-        err = pg.inner_text('[data-topic="news"]')
-        check(all(x in err for x in ['rss2json.com', 'allorigins.win', 'codetabs.com', 'GDELT']), f'error names each source and its reason: {err[:300]}')
+        check('Couldn’t load this' in pg.inner_text('[data-topic="news"]'), 'clear error when Wikipedia is unreachable')
 
         # Dark mode screenshot
         if SHOTS:

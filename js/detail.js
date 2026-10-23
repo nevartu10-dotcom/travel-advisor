@@ -337,10 +337,10 @@ async function loadSafetyHeadlines(card) {
     const items = await getSafetyHeadlines(card.city, card.countryName, { countryCode: card.countryCode, region: card.region });
     if (current?.id !== card.id) return;
     box.innerHTML = items.length
-      ? `<h4>Recent safety-related news</h4>
+      ? `<h4>Recent safety-related events</h4>
          <ul class="news">${items.map((n) => `<li><a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.title)}</a><small>${esc(n.domain || '')}</small></li>`).join('')}</ul>
-         <p class="source">Headlines from the last 7 days that mention ${esc(card.city)} or ${esc(card.countryName)} together with words like protest, strike, crime or flood. Shown for context, not as a rating.</p>`
-      : `<p class="muted">No safety-related headlines about ${esc(card.city)} or ${esc(card.countryName)} in the last 7 days.</p>`;
+         <p class="source">Events from the last 10 days on Wikipedia’s Current events about ${esc(card.city)} or ${esc(card.countryName)} involving unrest, crime, disasters or similar. Shown for context, not as a rating.</p>`
+      : `<p class="muted">No safety-related events about ${esc(card.city)} or ${esc(card.countryName)} on Wikipedia in the last 10 days.</p>`;
   } catch {
     if (current?.id === card.id) box.innerHTML = '';
   }
@@ -367,13 +367,15 @@ function renderSights(list, card) {
     <p class="source">From Wikipedia, ranked by how many people read about each place in the last 30 days, within 10 km. Tap a name to read more.</p>`;
 }
 
-function renderNews({ items, name, source }) {
-  if (!items.length) return `<p class="muted">No English-language headlines about ${esc(name)} in the last three days. <a href="${newsSearchUrl(name)}" target="_blank" rel="noopener">Search Google News</a></p>`;
+function renderNews({ items, name }) {
+  const more = `<a href="${newsSearchUrl(name)}" target="_blank" rel="noopener">Latest headlines on Google News</a>`;
+  if (!items.length) return `<p class="muted">No notable events about ${esc(name)} on Wikipedia in the last 10 days.</p><p class="source">${more}</p>`;
+  const day = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' });
   return `
     <ul class="news">
-      ${items.map((n) => `<li><a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.title)}</a><small>${esc(n.domain || '')}</small></li>`).join('')}
+      ${items.map((n) => `<li><a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.title)}</a><small>${esc([n.date ? day.format(n.date) : '', n.domain].filter(Boolean).join(', '))}</small></li>`).join('')}
     </ul>
-    <p class="source">English-language headlines from the last three days, via ${esc(source)}. <a href="${newsSearchUrl(name)}" target="_blank" rel="noopener">More on Google News</a></p>`;
+    <p class="source">Notable recent events from Wikipedia’s Current events and “${new Date().getFullYear()} in ${esc(name)}”, linked to the original reports. ${more}</p>`;
 }
 
 function renderHolidays(h, card) {

@@ -3,7 +3,7 @@
 //  - Map tiles: cache-first (capped), so maps you've seen work offline.
 //  - Live data APIs: always network first; the last answer is used only when offline.
 
-const VERSION = 'v11';
+const VERSION = 'v12';
 const SHELL = `ta-shell-${VERSION}`;
 const TILES = 'ta-tiles';
 const DATA = 'ta-data';
@@ -31,7 +31,7 @@ const SHELL_FILES = [
   'js/api/places.js',
   'js/api/sights.js',
   'js/api/news.js',
-  'js/api/gdelt.js',
+  'js/api/match.js',
   'js/api/phrases.js',
   'js/data/plugs.js',
   'js/data/phrasebook.js',
