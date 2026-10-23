@@ -160,6 +160,7 @@ export function getSafetyHeadlines(city, countryName, { countryCode, region } = 
       timespan: '7d',
       isAbout,
       max: 3,
+      useGdelt: false, // keep GDELT's request allowance for the news section
     });
     return items.map((it) => ({ ...it, title: limitWords(it.title, 25) }));
   });

@@ -1,25 +1,56 @@
-// News headlines, from two sources:
-//  1. Google News search (English), read through rss2json.com, a free service that
-//     converts the news feed into a format a web app is allowed to read.
+// News headlines.
+//  1. Google News search (English). A web app can't read Google's feed directly, so it
+//     goes through a free relay; three are tried in turn:
+//       rss2json.com (converts to JSON), allorigins.win and codetabs.com (pass the feed through).
+//     The relays only see the search words (e.g. the country name).
 //  2. Fallback: the GDELT DOC 2.0 API.
 // Headlines that don't name the destination are dropped (see headlineMatcher).
-import { fetchJSON, limitWords, countWords, remember } from './http.js';
+import { fetchJSON, fetchText, limitWords, countWords, remember } from './http.js';
 import { gdelt, cleanTitle, headlineMatcher } from './gdelt.js';
 
-/** Google News search → [{title, url, domain}] */
+function splitSource(raw, fallback = '') {
+  const cut = raw.lastIndexOf(' - ');
+  return cut > 0 ? { title: cleanTitle(raw.slice(0, cut)), source: raw.slice(cut + 3).trim() } : { title: cleanTitle(raw), source: fallback };
+}
+
+function parseRss(xml) {
+  const doc = new DOMParser().parseFromString(xml, 'text/xml');
+  const items = [...doc.querySelectorAll('item')];
+  if (!items.length) throw new Error('feed had no stories');
+  return items.map((it) => {
+    const { title, source } = splitSource(it.querySelector('title')?.textContent || '', it.querySelector('source')?.textContent || '');
+    return { title, url: it.querySelector('link')?.textContent || '', domain: source };
+  });
+}
+
+const RELAYS = [
+  {
+    name: 'rss2json.com',
+    async get(feed) {
+      const data = await fetchJSON(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed)}`, { timeout: 12000 });
+      if (data?.status !== 'ok' || !Array.isArray(data.items)) throw new Error(data?.message || 'no feed returned');
+      return data.items.map((it) => {
+        const { title, source } = splitSource(String(it.title || ''), it.author || '');
+        return { title, url: it.link, domain: source };
+      });
+    },
+  },
+  { name: 'allorigins.win', get: async (feed) => parseRss(await fetchText(`https://api.allorigins.win/raw?url=${encodeURIComponent(feed)}`, { timeout: 12000 })) },
+  { name: 'codetabs.com', get: async (feed) => parseRss(await fetchText(`https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(feed)}`, { timeout: 12000 })) },
+];
+
+/** Google News search → [{title, url, domain}], trying each relay in turn. */
 async function googleNews(q) {
   const feed = `https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=en-US&gl=US&ceid=US:en`;
-  const data = await fetchJSON(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed)}`, { timeout: 15000 });
-  if (data?.status !== 'ok' || !Array.isArray(data.items)) throw new Error(data?.message || 'News feed unavailable');
-  return data.items.map((it) => {
-    const raw = String(it.title || '');
-    const cut = raw.lastIndexOf(' - ');
-    return {
-      title: cleanTitle(cut > 0 ? raw.slice(0, cut) : raw),
-      url: it.link,
-      domain: cut > 0 ? raw.slice(cut + 3).trim() : it.author || '',
-    };
-  });
+  const reasons = [];
+  for (const relay of RELAYS) {
+    try {
+      return await relay.get(feed);
+    } catch (err) {
+      reasons.push(`${relay.name}: ${err.message}`);
+    }
+  }
+  throw new Error(reasons.join('; '));
 }
 
 async function gdeltNews(query, timespan) {
@@ -50,21 +81,22 @@ function pick(list, isAbout, max, { fill = false } = {}) {
 }
 
 /**
- * Search news: Google News first, GDELT as fallback.
- * Returns { items, source }.
+ * Search news: Google News first, GDELT as fallback (unless useGdelt is false).
+ * Returns { items, source }. On failure the error lists each source's reason.
  */
-export async function searchNews({ google, gdeltQuery, timespan, isAbout, max, fill }) {
-  let googleErr;
+export async function searchNews({ google, gdeltQuery, timespan, isAbout, max, fill, useGdelt = true }) {
+  let googleReason = '';
   try {
     const items = pick(await googleNews(google), isAbout, max, { fill });
-    if (items.length) return { items, source: 'Google News' };
+    if (items.length || !useGdelt) return { items, source: 'Google News' };
   } catch (err) {
-    googleErr = err;
+    googleReason = err.message;
   }
+  if (!useGdelt) throw new Error(`Google News unavailable (${googleReason})`);
   try {
     return { items: pick(await gdeltNews(gdeltQuery, timespan), isAbout, max), source: 'GDELT' };
   } catch (err) {
-    throw googleErr ? new Error('The news services are not answering right now. Try again in a minute') : err;
+    throw new Error(googleReason ? `Google News: ${googleReason}. GDELT: ${err.message}` : err.message);
   }
 }
 

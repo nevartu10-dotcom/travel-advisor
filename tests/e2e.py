@@ -14,7 +14,7 @@ ARR = today + datetime.timedelta(days=5)
 DEP = today + datetime.timedelta(days=10)
 HOL = today + datetime.timedelta(days=7)
 FAIL_OVERPASS = [False]
-FAIL_GOOGLE = [False]
+DOWN = set()  # relays / services to simulate as unreachable
 TILE = base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN89+7dfwAJbgPePoT6KwAAAABJRU5ErkJggg==')
 
 LISBON = {"lat": "38.7077", "lon": "-9.1366", "name": "Lisbon", "display_name": "Lisbon, Lisboa, Portugal",
@@ -85,8 +85,9 @@ def handler(route):
                    for i, (n, t) in enumerate([("Castelo de São Jorge", {"historic": "castle", "wikipedia": "pt:Castelo"}), ("Mosteiro dos Jerónimos", {"tourism": "attraction", "wikipedia": "en:Jerónimos Monastery"}),
                                                ("Torre de Belém", {"tourism": "attraction", "wikidata": "Q1"}), ("Miradouro da Graça", {"tourism": "viewpoint"}), ("Museu Gulbenkian", {"tourism": "museum", "wikidata": "Q2"}), ("Some bench", {"tourism": "attraction"})])]
         return j({"elements": els})
-    if 'rss2json' in url:
-        if FAIL_GOOGLE[0]:
+    relay = next((r for r in ('rss2json', 'allorigins', 'codetabs') if r in url), None)
+    if relay:
+        if relay in DOWN:
             return route.abort()
         from urllib.parse import unquote
         feed = unquote(unquote(url))
@@ -102,7 +103,13 @@ def handler(route):
                      "Wildfire season ends early in central Portugal thanks to heavy rains - AP",
                      "Record October for tourism as visitors keep coming to the country - The Portugal News",
                      "Another story that should not appear because five are enough - Example"]
-        return j({"status": "ok", "items": [{"title": t, "link": f"https://news.google.com/{i}", "pubDate": "2026-10-23"} for i, t in enumerate(items)]})
+        if relay == 'rss2json':
+            return j({"status": "ok", "items": [{"title": t, "link": f"https://news.google.com/{i}", "pubDate": "2026-10-23"} for i, t in enumerate(items)]})
+        from xml.sax.saxutils import escape
+        xml = '<?xml version="1.0"?><rss><channel>' + ''.join(f'<item><title>{escape(t)}</title><link>https://news.google.com/x{i}</link><source>{escape(t.rsplit(" - ", 1)[-1])}</source></item>' for i, t in enumerate(items)) + '</channel></rss>'
+        return route.fulfill(status=200, content_type='application/xml', body=xml, headers={'Access-Control-Allow-Origin': '*'})
+    if 'gdeltproject' in url and 'gdelt' in DOWN:
+        return route.abort()
     if 'gdeltproject' in url and 'protest' in url:
         return j({"articles": [{"title": "Lisbon metro workers announce strike for next Tuesday - Local", "url": "https://news.example/s1", "domain": "news.example"},
                                {"title": "Karachi protest blocks main road for hours", "url": "https://news.example/s0", "domain": "news.example"},
@@ -281,21 +288,35 @@ def main():
         pg.click('#detail [data-close]')
         pg.wait_for_function("() => !document.querySelector('#detail-sheet').open")
 
-        # Far-future trip -> last-year weather mode; offline-ish error handling.
+        # Far-future trip -> last-year weather; Overpass down; rss2json down -> second relay
         FAIL_OVERPASS[0] = True
-        FAIL_GOOGLE[0] = True
+        DOWN.add('rss2json')
         far_a = (today + datetime.timedelta(days=60)).isoformat(); far_d = (today + datetime.timedelta(days=64)).isoformat()
-        pg.evaluate(f"""() => localStorage.setItem('travel-advisor.cards.v1', JSON.stringify([{{id:'x',city:'Lisbon',region:'Lisboa',countryName:'Portugal',countryCode:'PT',lat:38.7,lon:-9.1,arrival:'{far_a}',departure:'{far_d}'}}]))""")
-        pg.reload(); pg.click('#tab-list'); pg.wait_for_selector('.ticket'); pg.click('.ticket')
-        pg.wait_for_selector('.weather-summary')
+        cards = [dict(id=f'c{i}', city=c, region='', countryName='Portugal', countryCode='PT', lat=38.7 + i * 0.3, lon=-9.1, arrival=far_a, departure=far_d) for i, c in enumerate(['Lisbon', 'Porto', 'Faro'])]
+        pg.evaluate(f"() => localStorage.setItem('travel-advisor.cards.v1', JSON.stringify({json.dumps(cards)}))")
+        def open_trip(city):
+            if pg.evaluate("document.querySelector('#detail-sheet').open"):
+                pg.click('#detail [data-close]'); pg.wait_for_function("() => !document.querySelector('#detail-sheet').open")
+            pg.click('#tab-list'); pg.locator('.ticket', has_text=city).click(); pg.wait_for_selector('#detail-sheet[open]')
+            pg.wait_for_selector('[data-topic="news"] .news li, [data-topic="news"] .error, [data-topic="news"] .muted', timeout=45000)
+        pg.reload()
+        open_trip('Lisbon')
         check('Same dates last year' in pg.inner_text('[data-topic="weather"]'), 'far trip uses last-year weather')
         pg.wait_for_selector('[data-topic="food"] .places li, [data-topic="food"] .error', timeout=30000)
         food = pg.locator('[data-topic="food"] .places li a').all_inner_texts()
         check(len(food) == 5 and all(f.startswith('Fallback') for f in food), f'restaurants fall back to Nominatim when Overpass fails {food}')
-        pg.wait_for_selector('[data-topic="news"] .news li, [data-topic="news"] .error, [data-topic="news"] .muted', timeout=40000)
+        check('via Google News' in pg.inner_text('[data-topic="news"]') and pg.locator('[data-topic="news"] .news li').count() == 5, 'news uses the second relay when rss2json is down')
+
+        DOWN.update({'allorigins', 'codetabs'})
+        open_trip('Porto')
         gnews = pg.locator('[data-topic="news"] .news li a').all_inner_texts()
-        check('via GDELT' in pg.inner_text('[data-topic="news"]') and len(gnews) == 5, 'news falls back to GDELT when Google News is unreachable')
+        check('via GDELT' in pg.inner_text('[data-topic="news"]') and len(gnews) == 4, 'news falls back to GDELT when every Google News relay is down (Lisbon-only story dropped for Porto)')
         check(not any('Pakistan' in n or 'Imran' in n for n in gnews), 'GDELT headlines not about the destination are filtered out')
+
+        DOWN.add('gdelt')
+        open_trip('Faro')
+        err = pg.inner_text('[data-topic="news"]')
+        check(all(x in err for x in ['rss2json.com', 'allorigins.win', 'codetabs.com', 'GDELT']), f'error names each source and its reason: {err[:300]}')
 
         # Dark mode screenshot
         if SHOTS:
