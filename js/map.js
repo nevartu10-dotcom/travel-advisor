@@ -9,7 +9,8 @@ let pendingPopup;
 let fittedOnce = false;
 
 export function initMap({ onOpenCard, onAddAt }) {
-  map = L.map('map', { zoomControl: true, worldCopyJump: true, tapTolerance: 15 }).setView([50, 15], 3);
+  map = L.map('map', { zoomControl: false, worldCopyJump: true, tapTolerance: 15 }).setView([50, 15], 3);
+  L.control.zoom({ position: 'bottomright' }).addTo(map);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -60,6 +61,29 @@ export function fitAll(cards) {
   if (!cards.length) return;
   const b = L.latLngBounds(cards.map((c) => [c.lat, c.lon]));
   map.fitBounds(b.pad(0.3), { maxZoom: 8 });
+}
+
+let searchMarker;
+
+/** Show a searched place with a pin and a "New trip card" button. */
+export function showPlace(place, onAdd) {
+  searchMarker?.remove();
+  const box = document.createElement('div');
+  box.className = 'new-here';
+  box.innerHTML = `<p></p><small></small><button class="btn btn-primary" type="button">New trip card</button>`;
+  box.querySelector('p').textContent = place.city || place.name;
+  box.querySelector('small').textContent = place.label;
+  box.querySelector('button').addEventListener('click', () => {
+    map.closePopup();
+    searchMarker?.remove();
+    onAdd(place);
+  });
+  searchMarker = L.marker([place.lat, place.lon], {
+    icon: L.divIcon({ className: '', html: '<div class="search-dot"></div>', iconSize: [18, 18], iconAnchor: [9, 9], popupAnchor: [0, -10] }),
+    keyboard: false,
+  }).addTo(map);
+  map.setView([place.lat, place.lon], Math.max(map.getZoom(), 13));
+  searchMarker.bindPopup(box, { autoPanPaddingTopLeft: [12, 80] }).openPopup();
 }
 
 export function focusCard(card) {

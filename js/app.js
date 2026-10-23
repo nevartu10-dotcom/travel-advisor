@@ -1,6 +1,7 @@
 // App entry: tabs, list rendering, wiring.
 import { getCards, onChange } from './store.js';
-import { initMap, renderPins, refreshSize, focusCard, fitAll } from './map.js';
+import { initMap, renderPins, refreshSize, focusCard, fitAll, showPlace } from './map.js';
+import { searchPlace } from './api/geocode.js';
 import { initForm, openForm } from './form.js';
 import { initDetail, openDetail } from './detail.js';
 import { flagEmoji } from './api/country.js';
@@ -57,7 +58,44 @@ function render() {
   const cards = getCards();
   renderList(cards);
   renderPins(cards);
-  $('map-hint').textContent = cards.length ? 'Tap a pin to open it, or the map to add a trip.' : 'Tap anywhere on the map to plan a trip there.';
+  $('map-hint').textContent = cards.length ? 'Tap a pin to open its card.' : 'Search above, or tap the map to plan a trip.';
+}
+
+let results = [];
+
+function pickResult(place) {
+  results = [];
+  $('map-results').innerHTML = '';
+  $('map-q').blur();
+  showPlace(place, (p) => openForm({ place: p }));
+}
+
+async function searchMap(e) {
+  e.preventDefault();
+  const q = $('map-q').value.trim();
+  const box = $('map-results');
+  if (!q) {
+    box.innerHTML = '<p>Type an address, city or place name.</p>';
+    return;
+  }
+  box.innerHTML = '<p>Searching…</p>';
+  try {
+    results = await searchPlace('', q);
+  } catch (err) {
+    box.innerHTML = `<p>Search failed: ${esc(err.message)}. Check your connection and try again.</p>`;
+    return;
+  }
+  if (!results.length) {
+    box.innerHTML = `<p>No place found for “${esc(q)}”. Check the spelling, or add the city or country.</p>`;
+    return;
+  }
+  if (results.length === 1) return pickResult(results[0]);
+  box.innerHTML = results
+    .map((r, i) => `<button type="button" class="result" data-i="${i}">
+      <span aria-hidden="true">${flagEmoji(r.countryCode)}</span>
+      <span>${esc(r.city || r.name)}, ${esc(r.countryName)}<small>${esc(r.label)}</small></span>
+    </button>`)
+    .join('');
 }
 
 function updateOnline() {
@@ -80,6 +118,12 @@ function start() {
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') setView(view === 'map' ? 'list' : 'map', { focus: true });
   });
   $('add-btn').addEventListener('click', () => openForm());
+  $('map-search').addEventListener('submit', searchMap);
+  $('map-q').addEventListener('input', () => { if (!$('map-q').value) $('map-results').innerHTML = ''; });
+  $('map-results').addEventListener('click', (e) => {
+    const b = e.target.closest('.result');
+    if (b) pickResult(results[Number(b.dataset.i)]);
+  });
   $('trip-list').addEventListener('click', (e) => {
     const t = e.target.closest('.ticket');
     if (t) openDetail(t.dataset.id);

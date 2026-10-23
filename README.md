@@ -8,7 +8,7 @@ A progressive web app that turns each trip into an advisory card. Add a destinat
 
 - **Two tabs:** trips as pins on a map, and trips as a list.
 - **Open a card** by tapping a pin or a list item.
-- **Add a trip** with the + button in the list, or by tapping a spot on the map (the country and city are filled in for you).
+- **Add a trip** by typing an address or city in the search bar on the map, with the + button in the list, or by tapping a spot on the map. From search or a map tap, the place is filled in for you and only the dates are left.
 - Each trip needs a country, a city or address, and arrival and departure dates.
 
 Each card shows:

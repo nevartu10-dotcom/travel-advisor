@@ -175,10 +175,31 @@ def main():
         pg.wait_for_function("() => !document.querySelector('.ticket')")
         check(True, 'delete removes the card')
 
+        # Map search bar -> pick a result -> New trip card -> form pre-filled -> card created
+        pg.click('#tab-map')
+        pg.fill('#map-q', 'Lisbon'); pg.press('#map-q', 'Enter')
+        pg.wait_for_selector('.result')
+        check(pg.locator('.result').count() == 2, 'map search lists 2 results')
+        if SHOTS: pg.screenshot(path=SHOTS / '11-map-search.png')
+        pg.locator('.result').first.click()
+        pg.wait_for_selector('.leaflet-popup .new-here button')
+        check(pg.locator('.map-results .result').count() == 0, 'results close after picking one')
+        if SHOTS: pg.screenshot(path=SHOTS / '12-map-search-pin.png')
+        pg.click('.leaflet-popup .new-here button')
+        pg.wait_for_selector('#form-sheet[open]')
+        check(pg.input_value('#f-place') == 'Lisbon' and pg.input_value('#f-country') == 'Portugal', 'form pre-filled from search')
+        check(pg.locator('.match[aria-pressed="true"]').count() == 1, 'searched place already selected')
+        pg.fill('#f-arrival', ARR.isoformat()); pg.fill('#f-departure', DEP.isoformat())
+        pg.click('#f-submit')
+        pg.wait_for_selector('#detail-sheet[open] #d-city')
+        check(pg.inner_text('#d-city') == 'Lisbon', 'card created from map search')
+        pg.click('#detail [data-close]')
+        pg.wait_for_function("() => !document.querySelector('#detail-sheet').open")
+
         # Far-future trip -> last-year weather mode; offline-ish error handling.
         far_a = (today + datetime.timedelta(days=60)).isoformat(); far_d = (today + datetime.timedelta(days=64)).isoformat()
         pg.evaluate(f"""() => localStorage.setItem('travel-advisor.cards.v1', JSON.stringify([{{id:'x',city:'Lisbon',region:'Lisboa',countryName:'Portugal',countryCode:'PT',lat:38.7,lon:-9.1,arrival:'{far_a}',departure:'{far_d}'}}]))""")
-        pg.reload(); pg.wait_for_selector('.ticket'); pg.click('.ticket')
+        pg.reload(); pg.click('#tab-list'); pg.wait_for_selector('.ticket'); pg.click('.ticket')
         pg.wait_for_selector('.weather-summary')
         check('Same dates last year' in pg.inner_text('[data-topic="weather"]'), 'far trip uses last-year weather')
 

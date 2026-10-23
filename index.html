@@ -26,7 +26,15 @@
   <main>
     <section class="view view-map" id="view-map" aria-labelledby="tab-map" role="tabpanel">
       <div id="map" class="map" aria-label="Map of your trips"></div>
-      <p class="map-hint" id="map-hint">Tap anywhere on the map to plan a trip there.</p>
+      <form class="map-search" id="map-search" role="search" autocomplete="off">
+        <label class="visually-hidden" for="map-q">Search for an address or city</label>
+        <input id="map-q" type="search" placeholder="Search an address or city" enterkeyhint="search" autocomplete="off" spellcheck="false">
+        <button type="submit" aria-label="Search">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+        </button>
+      </form>
+      <div class="map-results" id="map-results" aria-live="polite"></div>
+      <p class="map-hint" id="map-hint">Search above, or tap the map to plan a trip.</p>
     </section>
 
     <section class="view view-list" id="view-list" aria-labelledby="tab-list" role="tabpanel" hidden>

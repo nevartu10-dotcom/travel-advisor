@@ -48,7 +48,15 @@ export async function openForm(at) {
   renderMatches();
   openSheet($('form-sheet'));
 
-  if (at) {
+  if (at?.place) {
+    const place = at.place;
+    $('f-country').value = place.countryName;
+    $('f-place').value = place.city || place.name;
+    matches = [place];
+    selected = place;
+    renderMatches();
+    $('f-arrival').focus();
+  } else if (at) {
     $('f-matches').innerHTML = '<p class="match-note">Looking up the place you tapped…</p>';
     try {
       const place = await reversePlace(at.lat, at.lon);
