@@ -172,6 +172,14 @@ def main():
         check(pg.locator('.chip').count() == 0, 'single-language country shows no language switch')
         check('Official language of Portugal' in txt, 'language comes from bundled table')
 
+        # Notes: autosave, persist, 500-word cap
+        pg.fill('#d-notes', 'Hotel booking 12345.\nBring sunscreen.')
+        pg.wait_for_function("() => document.querySelector('#d-notes-status').textContent === 'Saved'", timeout=5000)
+        check('5 / 500 words' in pg.inner_text('#d-notes-count'), 'notes word counter')
+        pg.fill('#d-notes', ' '.join(f'w{i}' for i in range(520)))
+        check(pg.evaluate("document.querySelector('#d-notes').value.trim().split(/\\s+/).length") == 500, 'notes capped at 500 words')
+        check('limit reached' in pg.inner_text('#d-notes-count'), 'limit message shown')
+        pg.fill('#d-notes', 'Hotel booking 12345.\nBring sunscreen.')
         pg.click('#detail [data-close]')
         pg.wait_for_function("() => !document.querySelector('#detail-sheet').open")
         check(pg.locator('.ticket').count() == 1, 'list shows the new ticket')
@@ -181,6 +189,7 @@ def main():
         pg.click('.ticket')
         pg.wait_for_selector('#detail-sheet[open]')
         check(True, 'ticket opens the card')
+        check(pg.input_value('#d-notes') == 'Hotel booking 12345.\nBring sunscreen.', 'notes kept after closing and reopening (saved on close)')
         pg.go_back()
         pg.wait_for_function("() => !document.querySelector('#detail-sheet').open")
         check(True, 'back button closes the card')

@@ -67,6 +67,12 @@ export function openDetail(id) {
             <h3 id="t-${key}"><span class="h-icon" aria-hidden="true">${icon}</span>${esc(title)}</h3>
             <div class="topic-body"></div>
           </section>`).join('')}
+        <section class="topic notes" aria-labelledby="t-notes">
+          <h3 id="t-notes"><span class="h-icon" aria-hidden="true">📝</span>My notes</h3>
+          <label class="visually-hidden" for="d-notes">Your notes for this trip</label>
+          <textarea id="d-notes" rows="6" placeholder="Booking numbers, packing list, places friends recommended…">${esc(card.notes || '')}</textarea>
+          <p class="notes-meta"><span id="d-notes-count"></span><span id="d-notes-status" aria-live="polite"></span></p>
+        </section>
         <div class="detail-actions">
           <button class="btn btn-quiet" type="button" data-showmap>Show on map</button>
           <button class="btn btn-danger" type="button" data-delete>Delete trip</button>
@@ -93,6 +99,7 @@ export function openDetail(id) {
   });
 
   renderName(card);
+  initNotes(card);
 
   // Show the city name in the bar once the big title has scrolled away.
   const bar = root.querySelector('.detail-bar');
@@ -102,6 +109,61 @@ export function openDetail(id) {
   openSheet(sheet());
   root.scrollTop = 0;
   loadAll(card);
+}
+
+/* ---------- Notes ---------- */
+
+export const NOTES_MAX_WORDS = 500;
+const wordCount = (t) => (t.match(/\S+/g) || []).length;
+
+/** Keep the first `max` words, preserving the user's own spacing and line breaks. */
+function cutToWords(text, max) {
+  const m = text.match(new RegExp(`^\\s*(?:\\S+\\s+){${max - 1}}\\S+`));
+  return m ? m[0] : text;
+}
+
+function initNotes(card) {
+  const area = document.getElementById('d-notes');
+  const count = document.getElementById('d-notes-count');
+  const status = document.getElementById('d-notes-status');
+  let timer;
+
+  const grow = () => {
+    area.style.height = 'auto';
+    area.style.height = Math.max(area.scrollHeight, 140) + 'px';
+  };
+  const showCount = (n, capped) => {
+    count.textContent = `${n} / ${NOTES_MAX_WORDS} words${capped ? ' (limit reached)' : ''}`;
+    count.classList.toggle('at-limit', n >= NOTES_MAX_WORDS);
+  };
+  const save = () => {
+    clearTimeout(timer);
+    if ((card.notes || '') === area.value) return;
+    card.notes = area.value;
+    updateCard(card.id, { notes: card.notes });
+    status.textContent = 'Saved';
+  };
+
+  area.addEventListener('input', () => {
+    let capped = false;
+    if (wordCount(area.value) > NOTES_MAX_WORDS) {
+      const pos = area.selectionStart;
+      area.value = cutToWords(area.value, NOTES_MAX_WORDS);
+      area.setSelectionRange(Math.min(pos, area.value.length), Math.min(pos, area.value.length));
+      capped = true;
+    }
+    showCount(wordCount(area.value), capped);
+    grow();
+    status.textContent = 'Saving…';
+    clearTimeout(timer);
+    timer = setTimeout(save, 600);
+  });
+  area.addEventListener('blur', save);
+  // Save immediately if the card is closed mid-typing.
+  sheet().addEventListener('close', save, { once: true });
+
+  showCount(wordCount(area.value), false);
+  requestAnimationFrame(grow);
 }
 
 /* ---------- Trip name ---------- */

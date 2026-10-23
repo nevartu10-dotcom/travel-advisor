@@ -24,10 +24,11 @@ Each card shows:
 | Top 5 news headlines (max 150 words) | [GDELT](https://www.gdeltproject.org): English-language coverage of the country from the last 3 days |
 | Public holidays and observances during the visit | [Nager.Date](https://date.nager.at) |
 | Numbers 1–10 and basic words (hello, good morning, good day, good night, please, thank you, goodbye, yes, no) | Built-in phrasebook for ~45 languages with romanization for non-Latin scripts; other languages are machine-translated with [MyMemory](https://mymemory.translated.net) and labelled as such |
+| My notes (max 500 words) | Your own text, saved automatically on your device with the card |
 
 ## Data and privacy
 
-- **Only your trip cards are stored**, in your browser's local storage on your device. There is no account and no server of our own.
+- **Only your trip cards (including your notes) are stored**, in your browser's local storage on your device. There is no account and no server of our own.
 - Everything inside a card is fetched live from the public services above each time you open it.
 - For offline use while travelling, the service worker keeps the app itself, map tiles you've viewed, and the most recent answer from each service. Fresh data is always tried first.
 - Languages, plug types and phrases are stable reference data, so they ship with the app instead of being fetched. (restcountries.com, used at first, now requires a private API key, which can't be kept secret in a web app.)
