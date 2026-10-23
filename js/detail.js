@@ -124,7 +124,7 @@ async function section(card, key, load, render) {
 }
 
 function loadAll(card) {
-  const countryP = getCountry(card.countryCode);
+  const countryP = getCountry(card.countryCode, card.countryName);
 
   section(card, 'language', () => countryP, renderLanguage);
   section(card, 'weather', () => getWeather(card.lat, card.lon, card.arrival, card.departure), renderWeather);
@@ -160,7 +160,7 @@ function renderLanguage(c) {
   if (!c.languages.length) return '<p class="muted">No language information for this country.</p>';
   const langs = rankLanguages(c.languages);
   return `<ul class="lang-list">${langs.map((l) => `<li>${esc(l.name)}</li>`).join('')}</ul>
-    ${langs.length > 1 ? `<p class="source">Official and widely spoken languages in ${esc(c.name)}. Source: REST Countries.</p>` : `<p class="source">Source: REST Countries.</p>`}`;
+    <p class="source">${langs.length > 1 ? `Official and widely spoken languages in ${esc(c.name)}, most common first.` : `Official language of ${esc(c.name)}.`}</p>`;
 }
 
 function renderWeather(w) {
@@ -256,7 +256,7 @@ async function loadPhrases(card, countryP) {
   } catch (err) {
     if (current?.id !== card.id) return;
     el.innerHTML = `<p class="error">Couldn’t load languages: ${esc(err.message)}.</p><button class="btn btn-quiet retry" type="button">Try again</button>`;
-    el.querySelector('.retry').addEventListener('click', () => loadPhrases(card, getCountry(card.countryCode)));
+    el.querySelector('.retry').addEventListener('click', () => loadPhrases(card, getCountry(card.countryCode, card.countryName)));
     return;
   }
   if (current?.id !== card.id) return;

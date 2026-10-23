@@ -15,7 +15,7 @@ Each card shows:
 
 | Topic | Where it comes from |
 | --- | --- |
-| Languages spoken | [REST Countries](https://restcountries.com) |
+| Languages spoken | Built-in table of official and widely spoken languages per country |
 | Weather for the trip dates | [Open-Meteo](https://open-meteo.com): daily forecast up to 16 days ahead; for trips further out, the weather on the same dates last year |
 | Power plugs and voltage | Built-in table (IEC plug types), with a check against Finnish C/F plugs |
 | Safety (max 100 words) | Official advisories from the [U.S. State Department](https://travel.state.gov) and [Government of Canada](https://travel.gc.ca); sentences that mention your city or region are shown first |
@@ -30,7 +30,7 @@ Each card shows:
 - **Only your trip cards are stored**, in your browser's local storage on your device. There is no account and no server of our own.
 - Everything inside a card is fetched live from the public services above each time you open it.
 - For offline use while travelling, the service worker keeps the app itself, map tiles you've viewed, and the most recent answer from each service. Fresh data is always tried first.
-- Plug types and phrases are stable reference data, so they ship with the app instead of being fetched.
+- Languages, plug types and phrases are stable reference data, so they ship with the app instead of being fetched. (restcountries.com, used at first, now requires a private API key, which can't be kept secret in a web app.)
 
 ## Known limitations
 

@@ -29,6 +29,7 @@ def handler(route):
     if 'nominatim' in url and '/reverse' in url:
         return j({**LISBON, "address": {"town": "Porto", "state": "Porto", "country": "Portugal", "country_code": "pt"}})
     if 'restcountries' in url:
+        print('UNEXPECTED restcountries call')
         return j({"name": {"common": "Portugal", "official": "Portuguese Republic"}, "cca2": "PT", "altSpellings": ["PT", "Portuguesa"],
                   "languages": {"por": "Portuguese", "eng": "English"}, "capital": ["Lisbon"], "currencies": {"EUR": {"name": "Euro", "symbol": "€"}}})
     if 'open-meteo' in url:
@@ -43,7 +44,7 @@ def handler(route):
         return j([{"date": HOL.isoformat(), "localName": "Dia da Restauração da Independência", "name": "Restoration of Independence", "types": ["Public"], "counties": None},
                   {"date": "2001-01-01", "localName": "Old", "name": "Old", "types": ["Public"], "counties": None}])
     if 'cadataapi.state.gov' in url:
-        return j([{"Title": "Portugal - Level 1: Exercise Normal Precautions", "Link": "https://travel.state.gov/portugal",
+        return j([{"Title": "Portugal (Portuguese Republic) - Level 1: Exercise Normal Precautions", "Link": "https://travel.state.gov/portugal",
                    "Summary": "<p>Exercise normal precautions in Portugal.</p><p>Petty crime such as pickpocketing is common in tourist areas of Lisbon, especially on trams.</p><p>Wildfires can occur in summer in rural areas.</p>"},
                   {"Title": "Peru - Level 2: Exercise Increased Caution", "Summary": "x"}])
     if 'data.international.gc.ca' in url:
@@ -135,10 +136,8 @@ def main():
                 body.evaluate(f'e => e.scrollTop = {y}')
                 pg.screenshot(path=SHOTS / f'05-detail-{i}.png')
 
-        # English chip -> curated English
-        pg.click('.chip[data-code="eng"]')
-        pg.wait_for_function("() => document.querySelector('.phrases td').innerText.includes('Hello')")
-        check(True, 'switching phrase language works')
+        check(pg.locator('.chip').count() == 0, 'single-language country shows no language switch')
+        check('Official language of Portugal' in txt, 'language comes from bundled table')
 
         pg.click('#detail [data-close]')
         pg.wait_for_function("() => !document.querySelector('#detail-sheet').open")

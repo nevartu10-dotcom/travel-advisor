@@ -35,8 +35,10 @@ function findUS(rows, names) {
   const wanted = names.map(norm).filter(Boolean);
   for (const r of list) {
     const title = r.Title || r.title || '';
-    const country = norm(r.country || title.split(' - ')[0]);
-    if (wanted.includes(country)) {
+    const raw = r.country || title.split(' - ')[0];
+    // "Turkey (Türkiye)" → also try "Turkey" and "Türkiye"
+    const variants = [raw, raw.replace(/\(.*?\)/g, ''), ...(raw.match(/\(([^)]+)\)/g) || []).map((m) => m.slice(1, -1))].map(norm);
+    if (variants.some((v) => v && wanted.includes(v))) {
       const level = Number((title.match(/Level\s*(\d)/i) || [])[1]) || Number(r.level) || null;
       return {
         level,
