@@ -260,7 +260,8 @@ function loadAll(card) {
     'news',
     async () => {
       const c = await countryP.catch(() => null);
-      return { items: await getNews(c?.name || card.countryName), name: c?.name || card.countryName };
+      const name = c?.name || card.countryName;
+      return { items: await getNews(name, { countryCode: card.countryCode, city: card.city, region: card.region }), name };
     },
     renderNews
   );
@@ -332,7 +333,7 @@ async function loadSafetyHeadlines(card) {
   if (!box) return;
   box.innerHTML = '<p class="muted">Checking recent safety-related news…</p>';
   try {
-    const items = await getSafetyHeadlines(card.city, card.countryName);
+    const items = await getSafetyHeadlines(card.city, card.countryName, { countryCode: card.countryCode, region: card.region });
     if (current?.id !== card.id) return;
     box.innerHTML = items.length
       ? `<h4>Recent safety-related news</h4>

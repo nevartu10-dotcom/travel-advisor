@@ -19,9 +19,9 @@ Each card shows:
 | Weather for the trip dates | [Open-Meteo](https://open-meteo.com): daily forecast up to 16 days ahead; for trips further out, the weather on the same dates last year |
 | Power plugs and voltage | Built-in table (IEC plug types), with a check against Finnish C/F plugs |
 | Safety (max 100 words) | The "Stay safe" sections of [Wikivoyage](https://en.wikivoyage.org)'s city and country guides; the official U.S./Canadian advisory level when their servers allow it; plus up to 3 recent safety-related headlines from GDELT, shown as context rather than a rating |
-| Top 5 restaurants nearby | [OpenStreetMap](https://www.openstreetmap.org) via Overpass, within 1.5 km |
+| Top 5 restaurants nearby | [OpenStreetMap](https://www.openstreetmap.org) via Overpass (two servers), within 1.2 km; falls back to OpenStreetMap's Nominatim search when Overpass is busy |
 | Top 5 sights nearby | [Wikipedia](https://en.wikipedia.org): places with articles within 10 km, ranked by how many people read them in the last 30 days (weighted by distance), with photo and short description |
-| Top 5 news headlines (max 150 words) | [GDELT](https://www.gdeltproject.org): English-language coverage of the country from the last 3 days |
+| Top 5 news headlines (max 150 words) | [GDELT](https://www.gdeltproject.org): English-language coverage from the last 3 days, keeping only headlines that name the country, its people (e.g. "Portuguese") or the city |
 | Public holidays and observances during the visit | [Nager.Date](https://date.nager.at) |
 | Numbers 1–10 and basic words (hello, good morning, good day, good night, please, thank you, goodbye, yes, no) | Built-in phrasebook for ~45 languages with romanization for non-Latin scripts; other languages are machine-translated with [MyMemory](https://mymemory.translated.net) and labelled as such |
 | My notes (max 500 words) | Your own text, saved automatically on your device with the card |
@@ -38,7 +38,7 @@ Each card shows:
 - **Restaurants** are ranked by how notable they are in OpenStreetMap and distance; OSM has no ratings, so tap a name to see reviews in Google Maps. **Sights** depend on Wikipedia coverage, so small towns may show few.
 - **Safety** text comes from Wikivoyage, which is traveller-written and not updated in real time. The U.S. and Canadian advisory servers usually refuse requests from web pages, so the official level often won't show; the card links to um.fi for official Finnish advice. Headlines are not turned into a score, because news over-reports bad events.
 - **Flag days** that aren't public holidays may be missing; Nager.Date covers public holidays and some observances for about 120 countries.
-- **News** depends on GDELT's coverage; country names that are also common words (e.g. Chad, Jordan, Georgia) can bring unrelated headlines.
+- **News** depends on GDELT's coverage. Headlines must name the destination, which removes articles that only mention it in passing, but can also hide relevant stories phrased differently.
 - The free services have fair-use limits (e.g. Nominatim: about one search per second). Fine for personal use.
 
 ## Run locally

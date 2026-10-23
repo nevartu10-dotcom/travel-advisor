@@ -11,7 +11,7 @@
 // Recent safety-related headlines (GDELT) are offered separately as context. They are
 // not turned into a score: news over-reports bad events, so a score would mislead.
 import { fetchJSON, limitWords, countWords, remember } from './http.js';
-import { gdelt, cleanTitle } from './gdelt.js';
+import { gdelt, cleanTitle, headlineMatcher } from './gdelt.js';
 
 /* ---------- Wikivoyage ---------- */
 
@@ -149,16 +149,17 @@ export function getSafety({ countryCode, countryName, countryNames, city, region
 const SAFETY_TERMS = '(protest OR strike OR crime OR attack OR shooting OR flood OR wildfire OR earthquake OR storm OR hurricane OR typhoon OR unrest OR evacuation OR outbreak)';
 
 /** Up to 3 recent English-language headlines about safety-related events at the destination. */
-export function getSafetyHeadlines(city, countryName) {
+export function getSafetyHeadlines(city, countryName, { countryCode, region } = {}) {
   return remember(`safetynews:${city}:${countryName}`, async () => {
+    const isAbout = headlineMatcher({ countryName, countryCode, city, region });
     const place = city && city !== countryName ? `("${city}" OR "${countryName}")` : `"${countryName}"`;
-    const data = await gdelt({ query: `${place} ${SAFETY_TERMS} sourcelang:english`, maxrecords: '25', sort: 'hybridrel', timespan: '7d' });
+    const data = await gdelt({ query: `${place} ${SAFETY_TERMS} sourcelang:english`, maxrecords: '75', sort: 'hybridrel', timespan: '7d' });
     const seen = new Set();
     const items = [];
     for (const a of data?.articles || []) {
       const title = cleanTitle(a.title);
       const key = title.toLowerCase().slice(0, 60);
-      if (!title || seen.has(key) || countWords(title) < 4) continue;
+      if (!title || seen.has(key) || countWords(title) < 4 || !isAbout(title)) continue;
       seen.add(key);
       items.push({ title: limitWords(title, 25), url: a.url, domain: a.domain });
       if (items.length === 3) break;

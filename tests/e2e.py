@@ -13,6 +13,7 @@ today = datetime.date.today()
 ARR = today + datetime.timedelta(days=5)
 DEP = today + datetime.timedelta(days=10)
 HOL = today + datetime.timedelta(days=7)
+FAIL_OVERPASS = [False]
 TILE = base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN89+7dfwAJbgPePoT6KwAAAABJRU5ErkJggg==')
 
 LISBON = {"lat": "38.7077", "lon": "-9.1366", "name": "Lisbon", "display_name": "Lisbon, Lisboa, Portugal",
@@ -24,6 +25,9 @@ def days(start, n):
 def handler(route):
     url = route.request.url
     j = lambda obj: route.fulfill(status=200, content_type='application/json', body=json.dumps(obj), headers={'Access-Control-Allow-Origin': '*'})
+    if 'nominatim' in url and '/search' in url and 'q=restaurant' in url:
+        return j([{"name": n, "lat": str(38.70 + i * 0.001), "lon": "-9.10", "type": "restaurant", "category": "amenity", "importance": 0.1, "extratags": {"cuisine": "portuguese"}}
+                  for i, n in enumerate(["Fallback Tasca", "Fallback Marisqueira", "Fallback Café", "Fallback Grill", "Fallback Bistro", "Fallback Sushi"])])
     if 'nominatim' in url and '/search' in url:
         return j([LISBON, {**LISBON, "lat": "38.72", "display_name": "Lisbon district, Portugal", "address": {**LISBON["address"], "city": "Lisbon District"}}])
     if 'nominatim' in url and '/reverse' in url:
@@ -69,7 +73,9 @@ def handler(route):
             return j({"query": {"pages": {"2": {"title": "Portugal", "extract": "Portugal is a country.\n== Stay safe ==\nPortugal has a low crime rate. Wildfires can occur in rural areas in summer; follow local warnings. Rip currents are strong on Atlantic beaches.\n== Stay healthy ==\nTap water is safe."}}}})
         return j({"query": {"pages": {"-1": {"title": "x", "missing": ""}}}})
     if 'overpass' in url:
-        body = route.request.post_data or ''
+        if FAIL_OVERPASS[0]:
+            return route.fulfill(status=504, body='Gateway timeout')
+        body = (route.request.post_data or '') + url
         if 'restaurant' in body:
             els = [{"type": "node", "id": i, "lat": 38.7077 + i * 0.001, "lon": -9.1366, "tags": {"name": n, "cuisine": c, **({"wikidata": "Q1"} if i == 3 else {})}}
                    for i, (n, c) in enumerate([("Taberna da Rua", "portuguese"), ("Cervejaria Ramiro", "seafood"), ("Time Out Market", "food_court"), ("A Cevicheria", "peruvian"), ("Café A Brasileira", "coffee_shop"), ("Pizzeria X", "pizza"), ("Taberna da Rua", "portuguese")])]
@@ -80,10 +86,13 @@ def handler(route):
         return j({"elements": els})
     if 'gdeltproject' in url and 'protest' in url:
         return j({"articles": [{"title": "Lisbon metro workers announce strike for next Tuesday - Local", "url": "https://news.example/s1", "domain": "news.example"},
-                               {"title": "Wildfire near Sintra brought under control overnight", "url": "https://news.example/s2", "domain": "news.example"}]})
+                               {"title": "Karachi protest blocks main road for hours", "url": "https://news.example/s0", "domain": "news.example"},
+                               {"title": "Wildfire in central Portugal brought under control overnight", "url": "https://news.example/s2", "domain": "news.example"}]})
     if 'gdeltproject' in url:
         return j({"articles": [{"title": t, "url": f"https://news.example/{i}", "domain": "news.example", "seendate": "20261023T100000Z"} for i, t in enumerate([
+            "Pakistan cabinet approves new budget amid IMF talks - Dawn",
             "Portugal unveils new high-speed rail timetable between Lisbon and Porto - Reuters",
+            "Imran Khan supporters rally in Islamabad as court delays verdict",
             "Portugal unveils new high-speed rail timetable between Lisbon and Porto - Reuters",
             "Lisbon tram strike called off after last-minute agreement with unions",
             "Short",
@@ -154,13 +163,14 @@ def main():
         check(pg.locator('[data-topic="sights"] img.sight-img').count() == 1, 'sight photo shown when available')
         news = pg.locator('.news li a').all_inner_texts()
         check(len(news) == 5, '5 news headlines (deduped, short ones skipped)')
+        check(not any('Pakistan' in n or 'Imran' in n for n in news), 'headlines not about the destination are filtered out')
         check(sum(len(n.split()) for n in news) <= 150, f'news ≤ 150 words ({sum(len(n.split()) for n in news)})')
         check('Restauração' in txt and 'Public holiday' in txt, 'holiday during trip shown')
         check('Old' not in pg.inner_text('[data-topic="holidays"]'), 'holiday outside trip hidden')
         check(pg.locator('.numbers li').count() == 10 and 'Obrigado' in txt and 'Bom dia' in txt, 'Portuguese numbers + phrases')
         check(not pg.locator('#detail .error').count(), 'no section errors')
         pg.wait_for_selector('.safety-news h4', timeout=20000)
-        check(pg.locator('.safety-news li').count() == 2 and 'strike' in pg.inner_text('.safety-news'), 'recent safety-related headlines shown as context')
+        check(pg.locator('.safety-news li').count() == 2 and 'strike' in pg.inner_text('.safety-news') and 'Karachi' not in pg.inner_text('.safety-news'), 'safety headlines shown as context, off-topic ones filtered')
         if SHOTS:
             pg.screenshot(path=SHOTS / '04-detail-top.png')
             body = pg.locator('#detail')
@@ -251,11 +261,15 @@ def main():
         pg.wait_for_function("() => !document.querySelector('#detail-sheet').open")
 
         # Far-future trip -> last-year weather mode; offline-ish error handling.
+        FAIL_OVERPASS[0] = True
         far_a = (today + datetime.timedelta(days=60)).isoformat(); far_d = (today + datetime.timedelta(days=64)).isoformat()
         pg.evaluate(f"""() => localStorage.setItem('travel-advisor.cards.v1', JSON.stringify([{{id:'x',city:'Lisbon',region:'Lisboa',countryName:'Portugal',countryCode:'PT',lat:38.7,lon:-9.1,arrival:'{far_a}',departure:'{far_d}'}}]))""")
         pg.reload(); pg.click('#tab-list'); pg.wait_for_selector('.ticket'); pg.click('.ticket')
         pg.wait_for_selector('.weather-summary')
         check('Same dates last year' in pg.inner_text('[data-topic="weather"]'), 'far trip uses last-year weather')
+        pg.wait_for_selector('[data-topic="food"] .places li, [data-topic="food"] .error', timeout=30000)
+        food = pg.locator('[data-topic="food"] .places li a').all_inner_texts()
+        check(len(food) == 5 and all(f.startswith('Fallback') for f in food), f'restaurants fall back to Nominatim when Overpass fails {food}')
 
         # Dark mode screenshot
         if SHOTS:
@@ -265,7 +279,7 @@ def main():
             pg.click('#detail [data-close]'); pg.wait_for_timeout(300)
             pg.screenshot(path=SHOTS / '10-dark-list.png')
         b.close()
-    errors = [e for e in errors if 'favicon' not in e and 'net::ERR_FAILED' not in e]
+    errors = [e for e in errors if 'favicon' not in e and 'net::ERR_FAILED' not in e and '504' not in e]
     check(not errors, f'no JS errors {errors}')
     print(f'\n{len(fails)} failed' if fails else '\nALL PASSED')
     sys.exit(1 if fails else 0)
