@@ -4,7 +4,8 @@ import { getCountry, flagEmoji } from './api/country.js';
 import { getWeather } from './api/weather.js';
 import { getHolidays } from './api/holidays.js';
 import { getSafety, getSafetyHeadlines } from './api/safety.js';
-import { getRestaurants, getSights } from './api/places.js';
+import { getRestaurants } from './api/places.js';
+import { getSights } from './api/sights.js';
 import { getNews, newsSearchUrl } from './api/news.js';
 import { rankLanguages, getPhrases, PHRASE_KEYS, PHRASE_LABELS } from './api/phrases.js';
 import { plugInfo, PLUG_TYPES, HOME } from './data/plugs.js';
@@ -191,7 +192,7 @@ function loadAll(card) {
     (d) => renderSafety(d, card)
   ).then(() => loadSafetyHeadlines(card));
   section(card, 'food', () => getRestaurants(card.lat, card.lon), (d) => renderPlaces(d, 'restaurants within 1.5 km'));
-  section(card, 'sights', () => getSights(card.lat, card.lon), (d) => renderPlaces(d, 'sights within 8 km'));
+  section(card, 'sights', () => getSights(card.lat, card.lon, [card.city, card.region, card.countryName]), (d) => renderSights(d, card));
   section(
     card,
     'news',
@@ -288,6 +289,18 @@ function renderPlaces(list, scope) {
       ${list.map((p) => `<li><span><a href="${esc(p.mapUrl)}" target="_blank" rel="noopener">${esc(p.name)}</a>${p.detail ? `<small>${esc(p.detail)}</small>` : ''}</span><span class="dist">${km(p.distance)}</span></li>`).join('')}
     </ol>
     <p class="source">From OpenStreetMap, ranked by notability and distance (no ratings available). Tap a name to see reviews in Google Maps.</p>`;
+}
+
+function renderSights(list, card) {
+  if (!list.length) return `<p class="muted">No well-known sights found within 10 km of ${esc(card.city)} on Wikipedia.</p>`;
+  return `
+    <ol class="places sights">
+      ${list.map((p) => `<li>
+        ${p.image ? `<img class="sight-img" src="${esc(p.image)}" alt="" loading="lazy" width="56" height="56">` : '<span class="sight-img sight-img-empty" aria-hidden="true"></span>'}
+        <span><a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.name)}</a>${p.detail ? `<small>${esc(p.detail)}</small>` : ''}</span>
+        <span class="dist">${km(p.distance)}</span></li>`).join('')}
+    </ol>
+    <p class="source">From Wikipedia, ranked by how many people read about each place in the last 30 days, within 10 km. Tap a name to read more.</p>`;
 }
 
 function renderNews({ items, name }) {

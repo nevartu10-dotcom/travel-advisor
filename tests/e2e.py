@@ -45,6 +45,21 @@ def handler(route):
                   {"date": "2001-01-01", "localName": "Old", "name": "Old", "types": ["Public"], "counties": None}])
     if 'cadataapi.state.gov' in url or 'data.international.gc.ca' in url:
         return route.abort()  # what browsers see: these servers refuse requests from web pages
+    if 'en.wikipedia.org' in url:
+        pages = [
+            {"pageid": 1, "title": "Lisbon", "description": "Capital city of Portugal", "coordinates": [{"lat": 38.7077, "lon": -9.1366}], "pageviews": {"d1": 90000}},
+            {"pageid": 2, "title": "Belém Tower", "description": "fortified tower in Lisbon", "coordinates": [{"lat": 38.6916, "lon": -9.216}], "pageviews": {"d1": 20000}, "thumbnail": {"source": "https://upload.wikimedia.org/x.jpg"}},
+            {"pageid": 3, "title": "São Jorge Castle", "description": "Moorish castle in Lisbon", "coordinates": [{"lat": 38.7139, "lon": -9.1335}], "pageviews": {"d1": 15000}},
+            {"pageid": 4, "title": "Baixa", "description": "district of Lisbon", "coordinates": [{"lat": 38.71, "lon": -9.137}], "pageviews": {"d1": 30000}},
+            {"pageid": 5, "title": "Rossio railway station", "description": "railway station in Lisbon", "coordinates": [{"lat": 38.714, "lon": -9.141}], "pageviews": {"d1": 9000}},
+            {"pageid": 6, "title": "Jerónimos Monastery", "description": "monastery in Lisbon", "coordinates": [{"lat": 38.6979, "lon": -9.2068}]},
+            {"pageid": 7, "title": "Lisbon Oceanarium", "description": "public aquarium", "coordinates": [{"lat": 38.7635, "lon": -9.0937}], "pageviews": {"d1": 8000}},
+            {"pageid": 8, "title": "Santa Justa Lift", "description": "elevator in Lisbon", "coordinates": [{"lat": 38.7121, "lon": -9.1394}], "pageviews": {"d1": 7000}},
+            {"pageid": 9, "title": "Obscure Fountain", "description": "fountain", "coordinates": [{"lat": 38.70, "lon": -9.13}], "pageviews": {"d1": 3}},
+        ]
+        if 'pvipcontinue' in url:
+            return j({"query": {"pages": [{"pageid": 6, "title": "Jerónimos Monastery", "pageviews": {"d1": 25000}}]}})
+        return j({"continue": {"pvipcontinue": "6", "continue": "||"}, "query": {"pages": pages}})
     if 'wikivoyage.org' in url:
         if 'list=search' in url:
             return j({"query": {"search": [{"title": "Lisbon"}]}})
@@ -78,7 +93,7 @@ def handler(route):
             "Extra article that should not appear"])]})
     if 'mymemory' in url:
         return j({"responseData": {"translatedText": "MT"}})
-    if 'tile.openstreetmap.org' in url:
+    if 'tile.openstreetmap.org' in url or 'upload.wikimedia.org' in url:
         return route.fulfill(status=200, content_type='image/png', body=TILE)
     if 'fonts.' in url:
         return route.abort()
@@ -132,7 +147,11 @@ def main():
         safety = ' '.join(pg.locator('[data-topic="safety"] .topic-body > p:not(.source):not(.muted)').all_inner_texts())
         check(len(safety.split()) <= 100, f'safety ≤ 100 words ({len(safety.split())})')
         check(pg.locator('[data-topic="food"] .places li').count() == 5, '5 restaurants (deduped)')
-        check(pg.locator('[data-topic="sights"] .places li').count() == 5, '5 sights')
+        sights = pg.locator('[data-topic="sights"] .places li a').all_inner_texts()
+        check(len(sights) == 5, f'5 sights {sights}')
+        check(sights[:2] == ['São Jorge Castle', 'Jerónimos Monastery'], 'sights ranked by page views weighted by distance (incl. continued batch)')
+        check(not any(x in sights for x in ['Lisbon', 'Baixa', 'Rossio railway station']), 'city, districts and stations filtered out')
+        check(pg.locator('[data-topic="sights"] img.sight-img').count() == 1, 'sight photo shown when available')
         news = pg.locator('.news li a').all_inner_texts()
         check(len(news) == 5, '5 news headlines (deduped, short ones skipped)')
         check(sum(len(n.split()) for n in news) <= 150, f'news ≤ 150 words ({sum(len(n.split()) for n in news)})')

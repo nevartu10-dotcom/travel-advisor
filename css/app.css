@@ -359,6 +359,9 @@ main {
 .places small { display: block; color: var(--slate); }
 .places .dist { color: var(--slate); font-size: var(--step--1); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
+.sights li { grid-template-columns: 22px 56px 1fr auto; align-items: center; }
+.sight-img { width: 56px; height: 56px; border-radius: 6px; object-fit: cover; background: var(--rule); display: block; }
+
 /* News */
 .news { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
 .news a { color: var(--ink); font-weight: 500; text-decoration: none; }

@@ -1,4 +1,4 @@
-// Restaurants and sights near the destination, from OpenStreetMap (Overpass API).
+// Restaurants near the destination, from OpenStreetMap (Overpass API).
 // OSM has no ratings, so "top" is ranked by how notable a place is in the map
 // data (Wikipedia/Wikidata entry, heritage status, completeness) and distance.
 import { fetchJSON, remember } from './http.js';
@@ -70,30 +70,6 @@ export function getRestaurants(lat, lon) {
     return dedupe(list.sort((a, b) => score(b) - score(a))).slice(0, 5).map((p) => ({
       ...p,
       detail: [pretty(p.tags.cuisine), p.tags.opening_hours ? 'hours listed' : ''].filter(Boolean).join(', '),
-    }));
-  });
-}
-
-const SIGHT_WEIGHT = { museum: 1.5, attraction: 1.2, castle: 1.5, palace: 1.5, cathedral: 1.2, gallery: 1, viewpoint: 1, zoo: 1, aquarium: 1, theme_park: 1, monument: 0.8, fort: 1, ruins: 0.8, archaeological_site: 1 };
-
-export function getSights(lat, lon) {
-  return remember(`sights:${lat},${lon}`, async () => {
-    const r = 8000;
-    const q = `[out:json][timeout:25];(
-nwr["tourism"~"^(attraction|museum|gallery|viewpoint|zoo|aquarium|theme_park)$"]["name"](around:${r},${lat},${lon});
-nwr["historic"~"^(castle|palace|fort|monument|ruins|archaeological_site)$"]["name"](around:${r},${lat},${lon});
-nwr["building"="cathedral"]["name"](around:${r},${lat},${lon});
-);out center tags 300;`;
-    const data = await overpass(q);
-    const list = (data?.elements || []).map((e) => toPlace(e, lat, lon)).filter((p) => p.name);
-    const kind = (t) => t.tourism || t.historic || (t.building === 'cathedral' ? 'cathedral' : '');
-    const score = (p) => {
-      const t = p.tags;
-      return (t.wikipedia ? 4 : t.wikidata ? 3 : 0) + (t.heritage ? 1 : 0) + (SIGHT_WEIGHT[kind(t)] || 0.5) - p.distance / 3000;
-    };
-    return dedupe(list.sort((a, b) => score(b) - score(a))).slice(0, 5).map((p) => ({
-      ...p,
-      detail: pretty(kind(p.tags)),
     }));
   });
 }
