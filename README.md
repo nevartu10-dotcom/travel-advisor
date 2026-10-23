@@ -18,7 +18,7 @@ Each card shows:
 | Languages spoken | Built-in table of official and widely spoken languages per country |
 | Weather for the trip dates | [Open-Meteo](https://open-meteo.com): daily forecast up to 16 days ahead; for trips further out, the weather on the same dates last year |
 | Power plugs and voltage | Built-in table (IEC plug types), with a check against Finnish C/F plugs |
-| Safety (max 100 words) | Official advisories from the [U.S. State Department](https://travel.state.gov) and [Government of Canada](https://travel.gc.ca); sentences that mention your city or region are shown first |
+| Safety (max 100 words) | The "Stay safe" sections of [Wikivoyage](https://en.wikivoyage.org)'s city and country guides; the official U.S./Canadian advisory level when their servers allow it; plus up to 3 recent safety-related headlines from GDELT, shown as context rather than a rating |
 | Top 5 restaurants nearby | [OpenStreetMap](https://www.openstreetmap.org) via Overpass, within 1.5 km |
 | Top 5 sights nearby | OpenStreetMap via Overpass, within 8 km |
 | Top 5 news headlines (max 150 words) | [GDELT](https://www.gdeltproject.org): English-language coverage of the country from the last 3 days |
@@ -35,7 +35,7 @@ Each card shows:
 ## Known limitations
 
 - **Restaurants and sights** are ranked by how notable they are in OpenStreetMap (Wikipedia entry, heritage status, completeness) and distance. OSM has no ratings, so tap a name to see reviews in Google Maps.
-- **Safety** is only as local as the official advisory text. When the advisory doesn't mention your city or region, the card says so and shows the country-wide advice.
+- **Safety** text comes from Wikivoyage, which is traveller-written and not updated in real time. The U.S. and Canadian advisory servers usually refuse requests from web pages, so the official level often won't show; the card links to um.fi for official Finnish advice. Headlines are not turned into a score, because news over-reports bad events.
 - **Flag days** that aren't public holidays may be missing; Nager.Date covers public holidays and some observances for about 120 countries.
 - **News** depends on GDELT's coverage; country names that are also common words (e.g. Chad, Jordan, Georgia) can bring unrelated headlines.
 - The free services have fair-use limits (e.g. Nominatim: about one search per second). Fine for personal use.

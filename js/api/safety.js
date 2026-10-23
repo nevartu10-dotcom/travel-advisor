@@ -1,107 +1,168 @@
-// Safety summary (max 100 words) built from official government travel advisories:
-//  - US State Department (cadataapi.state.gov) — has regional detail in its text
-//  - Government of Canada (data.international.gc.ca) — fallback, country level
-// Area-specific lines are sentences in the advisory that mention the destination
-// city or region by name.
-import { fetchJSON, limitWords, remember } from './http.js';
+// Safety summary (max 100 words).
+//
+// Main text: the "Stay safe" sections of Wikivoyage's city and country guides
+// (traveller-written, CC BY-SA). Wikivoyage's API is open to web pages, so this works
+// from the browser.
+//
+// Official advisory level: tried from the U.S. State Department and the Government of
+// Canada; shown only if one of them answers (their servers may refuse direct requests
+// from web pages). The section works without them.
+//
+// Recent safety-related headlines (GDELT) are offered separately as context. They are
+// not turned into a score: news over-reports bad events, so a score would mislead.
+import { fetchJSON, limitWords, countWords, remember } from './http.js';
+import { gdelt, cleanTitle } from './gdelt.js';
 
-const US_URL = 'https://cadataapi.state.gov/api/TravelAdvisories';
-const CA_URL = 'https://data.international.gc.ca/travel-voyage/index-updated.json';
+/* ---------- Wikivoyage ---------- */
 
-const LEVEL_TEXT = {
-  1: 'Exercise normal precautions',
-  2: 'Exercise increased caution',
-  3: 'Reconsider travel',
-  4: 'Do not travel',
-};
+const WV = 'https://en.wikivoyage.org/w/api.php';
 
-const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z ]/g, ' ').replace(/\s+/g, ' ').trim();
-
-function htmlToText(html) {
-  const doc = new DOMParser().parseFromString(`<div>${html || ''}</div>`, 'text/html');
-  doc.querySelectorAll('li, p, br, h1, h2, h3, h4').forEach((el) => el.append(' . '));
-  return doc.body.textContent.replace(/\s*\.\s*\.\s*/g, '. ').replace(/\s+/g, ' ').trim();
+async function wvExtract(title) {
+  const url = `${WV}?action=query&format=json&origin=*&prop=extracts&explaintext=1&exsectionformat=wiki&redirects=1&titles=${encodeURIComponent(title)}`;
+  const data = await fetchJSON(url);
+  const page = Object.values(data?.query?.pages || {})[0];
+  if (!page || 'missing' in page || !page.extract) return null;
+  if (/may refer to|disambiguation/i.test(page.extract.slice(0, 400))) return null;
+  return { title: page.title, text: page.extract };
 }
 
-function sentences(text) {
-  return (text.match(/[^.!?]+[.!?]+/g) || [text]).map((s) => s.trim()).filter((s) => s.length > 3);
+async function wvSearch(query) {
+  const url = `${WV}?action=query&format=json&origin=*&list=search&srlimit=1&srsearch=${encodeURIComponent(query)}`;
+  const data = await fetchJSON(url);
+  return data?.query?.search?.[0]?.title || null;
 }
 
-const usAll = () => remember('safety:us', () => fetchJSON(US_URL));
-const caAll = () => remember('safety:ca', () => fetchJSON(CA_URL));
+/** Pull the level-2 "Stay safe" section out of a plain-text extract. */
+export function staySafeSection(text) {
+  const m = text.match(/(?:^|\n)==\s*Stay safe\s*==\s*\n([\s\S]*?)(?=\n==[^=]|$)/i);
+  if (!m) return '';
+  return m[1]
+    .split('\n')
+    .filter((line) => !/^=+.*=+$/.test(line.trim())) // drop sub-headings like "=== Crime ==="
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
-function findUS(rows, names) {
-  const list = Array.isArray(rows) ? rows : rows?.advisories || rows?.data || [];
-  const wanted = names.map(norm).filter(Boolean);
-  for (const r of list) {
-    const title = r.Title || r.title || '';
-    const raw = r.country || title.split(' - ')[0];
-    // "Turkey (Türkiye)" → also try "Turkey" and "Türkiye"
-    const variants = [raw, raw.replace(/\(.*?\)/g, ''), ...(raw.match(/\(([^)]+)\)/g) || []).map((m) => m.slice(1, -1))].map(norm);
-    if (variants.some((v) => v && wanted.includes(v))) {
-      const level = Number((title.match(/Level\s*(\d)/i) || [])[1]) || Number(r.level) || null;
-      return {
-        level,
-        text: htmlToText(r.Summary || r.summary || ''),
-        url: r.Link || r.url || 'https://travel.state.gov/content/travel/en/traveladvisories/traveladvisories.html',
-        updated: r.Updated || r.updated || r.Published || r.published || '',
-      };
+async function wvStaySafe(titles, searchQuery) {
+  for (const t of titles.filter(Boolean)) {
+    const page = await wvExtract(t).catch(() => null);
+    const section = page && staySafeSection(page.text);
+    if (section) return { title: page.title, text: section };
+  }
+  if (searchQuery) {
+    const found = await wvSearch(searchQuery).catch(() => null);
+    if (found) {
+      const page = await wvExtract(found).catch(() => null);
+      const section = page && staySafeSection(page.text);
+      if (section) return { title: page.title, text: section };
     }
   }
   return null;
 }
 
-function findCA(data, cc) {
-  const row = data?.data?.[cc];
-  if (!row) return null;
-  const state = Number(row['advisory-state']);
-  const eng = row.eng || {};
-  return {
-    level: Number.isFinite(state) ? state + 1 : null,
-    headline: eng['advisory-text'] || '',
-    text: htmlToText(eng['recent-updates'] || ''),
-    url: eng['url-slug'] ? `https://travel.gc.ca/destinations/${eng['url-slug']}` : 'https://travel.gc.ca/travelling/advisories',
-  };
+const wvUrl = (title) => `https://en.wikivoyage.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))}#Stay_safe`;
+
+/* ---------- Official advisories (optional) ---------- */
+
+const LEVEL_TEXT = { 1: 'Exercise normal precautions', 2: 'Exercise increased caution', 3: 'Reconsider travel', 4: 'Do not travel' };
+const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z ]/g, ' ').replace(/\s+/g, ' ').trim();
+
+async function usLevel(names) {
+  const rows = await remember('safety:us', () => fetchJSON('https://cadataapi.state.gov/api/TravelAdvisories', { timeout: 8000 }));
+  const list = Array.isArray(rows) ? rows : rows?.advisories || rows?.data || [];
+  const wanted = names.map(norm).filter(Boolean);
+  for (const r of list) {
+    const title = r.Title || r.title || '';
+    const raw = r.country || title.split(' - ')[0];
+    const variants = [raw, raw.replace(/\(.*?\)/g, ''), ...(raw.match(/\(([^)]+)\)/g) || []).map((x) => x.slice(1, -1))].map(norm);
+    if (variants.some((v) => v && wanted.includes(v))) {
+      const level = Number((title.match(/Level\s*(\d)/i) || [])[1]) || Number(r.level) || null;
+      if (level) return { level, name: 'U.S. State Department', url: r.Link || r.url || 'https://travel.state.gov/content/travel/en/traveladvisories/traveladvisories.html' };
+    }
+  }
+  return null;
 }
 
-export function getSafety({ countryCode, countryNames, city, region }) {
+async function caLevel(cc) {
+  const data = await remember('safety:ca', () => fetchJSON('https://data.international.gc.ca/travel-voyage/index-updated.json', { timeout: 8000 }));
+  const row = data?.data?.[cc];
+  const state = Number(row?.['advisory-state']);
+  if (!row || !Number.isFinite(state)) return null;
+  const slug = row.eng?.['url-slug'];
+  return { level: state + 1, name: 'Government of Canada', url: slug ? `https://travel.gc.ca/destinations/${slug}` : 'https://travel.gc.ca/travelling/advisories' };
+}
+
+/* ---------- Public API ---------- */
+
+function firstSentences(text, maxWords) {
+  const parts = text.match(/[^.!?]+[.!?]+(\s|$)/g) || [text];
+  let out = '';
+  for (const s of parts) {
+    if (countWords(out + s) > maxWords) break;
+    out += s;
+  }
+  return (out || limitWords(text, maxWords)).trim();
+}
+
+export function getSafety({ countryCode, countryName, countryNames, city, region }) {
   return remember(`safety:${countryCode}:${city}:${region}`, async () => {
-    const [us, ca] = await Promise.allSettled([usAll(), caAll()]);
-    const usHit = us.status === 'fulfilled' ? findUS(us.value, countryNames) : null;
-    const caHit = ca.status === 'fulfilled' ? findCA(ca.value, countryCode) : null;
-    if (!usHit && !caHit) {
-      const reason = us.status === 'rejected' ? us.reason?.message : 'No advisory found for this country';
-      throw new Error(reason);
+    const [cityGuide, countryGuide, us, ca] = await Promise.allSettled([
+      wvStaySafe([city, region && region !== city ? region : null], city ? `${city} ${countryName}` : null),
+      wvStaySafe([countryName, ...(countryNames || [])].slice(0, 3), null),
+      usLevel(countryNames || [countryName]),
+      caLevel(countryCode),
+    ]).then((r) => r.map((x) => (x.status === 'fulfilled' ? x.value : null)));
+
+    const official = us || ca;
+    // Don't show the same page twice (e.g. city-states like Singapore).
+    const country = countryGuide && countryGuide.title !== cityGuide?.title ? countryGuide : null;
+    if (!cityGuide && !country && !official) throw new Error('No safety information found for this destination');
+
+    const levelText = official ? `Level ${official.level} of 4: ${LEVEL_TEXT[official.level]}` : '';
+    let budget = 100 - countWords(levelText);
+    const parts = [];
+    if (cityGuide) {
+      const t = firstSentences(cityGuide.text, country ? Math.round(budget * 0.6) : budget);
+      parts.push({ label: cityGuide.title, text: t });
+      budget -= countWords(t) + countWords(cityGuide.title);
+    }
+    if (country && budget > 15) {
+      parts.push({ label: country.title, text: firstSentences(country.text, budget - countWords(country.title)) });
     }
 
-    const level = usHit?.level || caHit?.level || null;
-    const levelText = (level && LEVEL_TEXT[level]) || caHit?.headline || 'See advisory';
-
-    const areaTerms = [city, region].map(norm).filter((t) => t.length > 2);
-    const body = usHit?.text || caHit?.text || '';
-    const all = sentences(body);
-    const area = all.filter((s) => areaTerms.some((t) => norm(s).includes(t)));
-    const general = all.filter((s) => !area.includes(s));
-
-    let text = '';
-    if (area.length) text += `About ${city || region}: ${area.join(' ')} `;
-    text += general.join(' ');
-    if (!text.trim() && caHit?.headline) text = `${caHit.headline}.`;
-
     const sources = [];
-    if (usHit) sources.push({ name: 'U.S. State Department', url: usHit.url });
-    if (caHit) sources.push({ name: 'Government of Canada', url: caHit.url });
+    if (cityGuide) sources.push({ name: `Wikivoyage: ${cityGuide.title}`, url: wvUrl(cityGuide.title) });
+    if (country) sources.push({ name: `Wikivoyage: ${country.title}`, url: wvUrl(country.title) });
+    if (official) sources.push({ name: official.name, url: official.url });
 
     return {
-      level,
+      level: official?.level || null,
       levelText,
-      areaMentioned: area.length > 0,
-      text: limitWords(text.trim(), 100 - countWordsSafe(levelText)),
+      parts,
+      cityCovered: !!cityGuide,
       sources,
     };
   });
 }
 
-function countWordsSafe(s) {
-  return String(s).split(/\s+/).filter(Boolean).length + 2;
+const SAFETY_TERMS = '(protest OR strike OR crime OR attack OR shooting OR flood OR wildfire OR earthquake OR storm OR hurricane OR typhoon OR unrest OR evacuation OR outbreak)';
+
+/** Up to 3 recent English-language headlines about safety-related events at the destination. */
+export function getSafetyHeadlines(city, countryName) {
+  return remember(`safetynews:${city}:${countryName}`, async () => {
+    const place = city && city !== countryName ? `("${city}" OR "${countryName}")` : `"${countryName}"`;
+    const data = await gdelt({ query: `${place} ${SAFETY_TERMS} sourcelang:english`, maxrecords: '25', sort: 'hybridrel', timespan: '7d' });
+    const seen = new Set();
+    const items = [];
+    for (const a of data?.articles || []) {
+      const title = cleanTitle(a.title);
+      const key = title.toLowerCase().slice(0, 60);
+      if (!title || seen.has(key) || countWords(title) < 4) continue;
+      seen.add(key);
+      items.push({ title: limitWords(title, 25), url: a.url, domain: a.domain });
+      if (items.length === 3) break;
+    }
+    return items;
+  });
 }

@@ -345,6 +345,10 @@ main {
 .level-4 .level-dots i:nth-child(-n+4) { background: currentColor; }
 .level-1 { color: var(--level-1); } .level-2 { color: var(--level-2); } .level-3 { color: var(--level-3); } .level-4 { color: var(--level-4); }
 
+.safety-news { margin-top: 14px; }
+.safety-news:empty { display: none; }
+.safety-news h4 { margin: 0 0 8px; font-size: var(--step-0); font-weight: 600; }
+
 /* Places */
 .places { list-style: none; margin: 0; padding: 0; counter-reset: place; }
 .places li { counter-increment: place; display: grid; grid-template-columns: 28px 1fr auto; gap: 10px; align-items: baseline; padding: 10px 0; border-bottom: 1px dashed var(--rule); }

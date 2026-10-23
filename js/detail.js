@@ -3,7 +3,7 @@ import { getCard, deleteCard, updateCard } from './store.js';
 import { getCountry, flagEmoji } from './api/country.js';
 import { getWeather } from './api/weather.js';
 import { getHolidays } from './api/holidays.js';
-import { getSafety } from './api/safety.js';
+import { getSafety, getSafetyHeadlines } from './api/safety.js';
 import { getRestaurants, getSights } from './api/places.js';
 import { getNews, newsSearchUrl } from './api/news.js';
 import { rankLanguages, getPhrases, PHRASE_KEYS, PHRASE_LABELS } from './api/phrases.js';
@@ -186,10 +186,10 @@ function loadAll(card) {
     async () => {
       const c = await countryP.catch(() => null);
       const names = [card.countryName, c?.name, c?.official, ...(c?.altNames || [])].filter(Boolean);
-      return getSafety({ countryCode: card.countryCode, countryNames: names, city: card.city, region: card.region });
+      return getSafety({ countryCode: card.countryCode, countryName: c?.name || card.countryName, countryNames: names, city: card.city, region: card.region });
     },
     (d) => renderSafety(d, card)
-  );
+  ).then(() => loadSafetyHeadlines(card));
   section(card, 'food', () => getRestaurants(card.lat, card.lon), (d) => renderPlaces(d, 'restaurants within 1.5 km'));
   section(card, 'sights', () => getSights(card.lat, card.lon), (d) => renderPlaces(d, 'sights within 8 km'));
   section(
@@ -257,10 +257,28 @@ function renderPlugs(p) {
 function renderSafety(s, card) {
   const lvl = s.level && s.level >= 1 && s.level <= 4 ? s.level : null;
   return `
-    ${lvl ? `<div class="level level-${lvl}"><span class="level-dots" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Level ${lvl} of 4: ${esc(s.levelText)}</div>` : `<p><strong>${esc(s.levelText)}</strong></p>`}
-    <p>${esc(s.text)}</p>
-    ${s.areaMentioned ? '' : `<p class="muted">The advisory doesn’t single out ${esc(card.city)}; the country-wide advice applies.</p>`}
-    <p class="source">Sources: ${s.sources.map((x) => `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a>`).join(', ')}. For Finnish travellers: <a href="https://um.fi/matkustustiedotteet" target="_blank" rel="noopener">um.fi travel advice</a>.</p>`;
+    ${lvl ? `<div class="level level-${lvl}"><span class="level-dots" aria-hidden="true"><i></i><i></i><i></i><i></i></span>${esc(s.levelText)}</div>` : ''}
+    ${s.parts.map((p) => `<p><strong>${esc(p.label)}:</strong> ${esc(p.text)}</p>`).join('')}
+    ${s.cityCovered ? '' : `<p class="muted">No local safety notes found for ${esc(card.city)}; the country-wide advice applies.</p>`}
+    <div class="safety-news" data-safety-news></div>
+    <p class="source">Sources: ${s.sources.map((x) => `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a>`).join(', ')}. Official advice for Finnish travellers: <a href="https://um.fi/matkustustiedotteet" target="_blank" rel="noopener">um.fi</a>.</p>`;
+}
+
+async function loadSafetyHeadlines(card) {
+  const box = document.querySelector('#detail [data-safety-news]');
+  if (!box) return;
+  box.innerHTML = '<p class="muted">Checking recent safety-related news…</p>';
+  try {
+    const items = await getSafetyHeadlines(card.city, card.countryName);
+    if (current?.id !== card.id) return;
+    box.innerHTML = items.length
+      ? `<h4>Recent safety-related news</h4>
+         <ul class="news">${items.map((n) => `<li><a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.title)}</a><small>${esc(n.domain || '')}</small></li>`).join('')}</ul>
+         <p class="source">Headlines from the last 7 days that mention ${esc(card.city)} or ${esc(card.countryName)} together with words like protest, strike, crime or flood. Shown for context, not as a rating.</p>`
+      : `<p class="muted">No safety-related headlines about ${esc(card.city)} or ${esc(card.countryName)} in the last 7 days.</p>`;
+  } catch {
+    if (current?.id === card.id) box.innerHTML = '';
+  }
 }
 
 function renderPlaces(list, scope) {

@@ -43,12 +43,16 @@ def handler(route):
     if 'date.nager.at' in url:
         return j([{"date": HOL.isoformat(), "localName": "Dia da Restauração da Independência", "name": "Restoration of Independence", "types": ["Public"], "counties": None},
                   {"date": "2001-01-01", "localName": "Old", "name": "Old", "types": ["Public"], "counties": None}])
-    if 'cadataapi.state.gov' in url:
-        return j([{"Title": "Portugal (Portuguese Republic) - Level 1: Exercise Normal Precautions", "Link": "https://travel.state.gov/portugal",
-                   "Summary": "<p>Exercise normal precautions in Portugal.</p><p>Petty crime such as pickpocketing is common in tourist areas of Lisbon, especially on trams.</p><p>Wildfires can occur in summer in rural areas.</p>"},
-                  {"Title": "Peru - Level 2: Exercise Increased Caution", "Summary": "x"}])
-    if 'data.international.gc.ca' in url:
-        return j({"data": {"PT": {"advisory-state": 0, "eng": {"advisory-text": "Take normal security precautions", "url-slug": "portugal"}}}})
+    if 'cadataapi.state.gov' in url or 'data.international.gc.ca' in url:
+        return route.abort()  # what browsers see: these servers refuse requests from web pages
+    if 'wikivoyage.org' in url:
+        if 'list=search' in url:
+            return j({"query": {"search": [{"title": "Lisbon"}]}})
+        if 'titles=Lisbon' in url:
+            return j({"query": {"pages": {"1": {"title": "Lisbon", "extract": "Lisbon is the capital.\n== Get in ==\nBy plane.\n== Stay safe ==\nLisbon is one of the safest capitals in Europe. Pickpocketing is common on tram 28 and around Baixa, so keep valuables out of sight.\n=== Scams ===\nIgnore street sellers offering sunglasses or drugs; the drugs are fake.\n== Go next ==\nSintra."}}}})
+        if 'titles=Portugal' in url:
+            return j({"query": {"pages": {"2": {"title": "Portugal", "extract": "Portugal is a country.\n== Stay safe ==\nPortugal has a low crime rate. Wildfires can occur in rural areas in summer; follow local warnings. Rip currents are strong on Atlantic beaches.\n== Stay healthy ==\nTap water is safe."}}}})
+        return j({"query": {"pages": {"-1": {"title": "x", "missing": ""}}}})
     if 'overpass' in url:
         body = route.request.post_data or ''
         if 'restaurant' in body:
@@ -59,6 +63,9 @@ def handler(route):
                    for i, (n, t) in enumerate([("Castelo de São Jorge", {"historic": "castle", "wikipedia": "pt:Castelo"}), ("Mosteiro dos Jerónimos", {"tourism": "attraction", "wikipedia": "en:Jerónimos Monastery"}),
                                                ("Torre de Belém", {"tourism": "attraction", "wikidata": "Q1"}), ("Miradouro da Graça", {"tourism": "viewpoint"}), ("Museu Gulbenkian", {"tourism": "museum", "wikidata": "Q2"}), ("Some bench", {"tourism": "attraction"})])]
         return j({"elements": els})
+    if 'gdeltproject' in url and 'protest' in url:
+        return j({"articles": [{"title": "Lisbon metro workers announce strike for next Tuesday - Local", "url": "https://news.example/s1", "domain": "news.example"},
+                               {"title": "Wildfire near Sintra brought under control overnight", "url": "https://news.example/s2", "domain": "news.example"}]})
     if 'gdeltproject' in url:
         return j({"articles": [{"title": t, "url": f"https://news.example/{i}", "domain": "news.example", "seendate": "20261023T100000Z"} for i, t in enumerate([
             "Portugal unveils new high-speed rail timetable between Lisbon and Porto - Reuters",
@@ -118,8 +125,11 @@ def main():
         check('Portuguese' in txt, 'language shown')
         check(pg.locator('.wday').count() == 6, 'weather shows 6 forecast days')
         check('Type C' in txt and 'Type F' in txt and 'fit here' in txt, 'plugs C/F + fits Finnish plugs')
-        check('Level 1 of 4' in txt and 'About Lisbon' in txt, 'safety level + Lisbon-specific sentence')
-        safety = pg.inner_text('[data-topic="safety"] .topic-body').split('Sources:')[0]
+        safety_txt = pg.inner_text('[data-topic="safety"] .topic-body')
+        check('Lisbon:' in safety_txt and 'tram 28' in safety_txt and 'Portugal:' in safety_txt, 'safety uses Wikivoyage city + country advice')
+        check('Scams' not in safety_txt, 'sub-headings stripped from safety text')
+        check(not pg.locator('[data-topic="safety"] .level').count(), 'no level shown when official advisories are unreachable')
+        safety = ' '.join(pg.locator('[data-topic="safety"] .topic-body > p:not(.source):not(.muted)').all_inner_texts())
         check(len(safety.split()) <= 100, f'safety ≤ 100 words ({len(safety.split())})')
         check(pg.locator('[data-topic="food"] .places li').count() == 5, '5 restaurants (deduped)')
         check(pg.locator('[data-topic="sights"] .places li').count() == 5, '5 sights')
@@ -130,6 +140,8 @@ def main():
         check('Old' not in pg.inner_text('[data-topic="holidays"]'), 'holiday outside trip hidden')
         check(pg.locator('.numbers li').count() == 10 and 'Obrigado' in txt and 'Bom dia' in txt, 'Portuguese numbers + phrases')
         check(not pg.locator('#detail .error').count(), 'no section errors')
+        pg.wait_for_selector('.safety-news h4', timeout=20000)
+        check(pg.locator('.safety-news li').count() == 2 and 'strike' in pg.inner_text('.safety-news'), 'recent safety-related headlines shown as context')
         if SHOTS:
             pg.screenshot(path=SHOTS / '04-detail-top.png')
             body = pg.locator('#detail')
