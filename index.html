@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Travel Advisor</title>
+  <meta name="description" content="Trip cards with language, weather, plugs, safety, food, sights, news, holidays and phrases for your destination.">
+  <meta name="theme-color" content="#14213D">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;800&display=swap">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <header class="appbar">
+    <h1 class="appbar-title" id="appbar-title">Trips</h1>
+    <span class="appbar-status" id="net-status" hidden>Offline</span>
+  </header>
+
+  <main>
+    <section class="view view-map" id="view-map" aria-labelledby="tab-map" role="tabpanel">
+      <div id="map" class="map" aria-label="Map of your trips"></div>
+      <p class="map-hint" id="map-hint">Tap anywhere on the map to plan a trip there.</p>
+    </section>
+
+    <section class="view view-list" id="view-list" aria-labelledby="tab-list" role="tabpanel" hidden>
+      <div class="list-wrap" id="trip-list"></div>
+      <button class="fab" id="add-btn" type="button" aria-label="Add a trip">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+    </section>
+  </main>
+
+  <nav class="tabbar" role="tablist" aria-label="Views">
+    <button class="tab" id="tab-map" role="tab" aria-controls="view-map" data-view="map" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5L9 4Z"/><path d="M9 4v13.5M15 6.5V20"/></svg>
+      <span>Map</span>
+    </button>
+    <button class="tab" id="tab-list" role="tab" aria-controls="view-list" data-view="list" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>
+      <span>List</span>
+    </button>
+  </nav>
+
+  <!-- New trip -->
+  <dialog class="sheet" id="form-sheet" aria-labelledby="form-title">
+    <form id="trip-form" class="sheet-inner" novalidate>
+      <div class="sheet-head">
+        <button class="icon-btn" type="button" data-close aria-label="Close">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+        <h2 id="form-title">New trip</h2>
+      </div>
+      <div class="sheet-body form-body">
+        <label class="field">
+          <span>Country</span>
+          <input name="country" id="f-country" autocomplete="country-name" required placeholder="e.g. Portugal">
+        </label>
+        <label class="field">
+          <span>City or address</span>
+          <input name="place" id="f-place" autocomplete="off" required placeholder="e.g. Lisbon, or Rua Augusta 100">
+        </label>
+        <button class="btn btn-quiet" type="button" id="f-find">Find on map</button>
+        <div class="matches" id="f-matches" aria-live="polite"></div>
+        <div class="field-row">
+          <label class="field">
+            <span>Arrival</span>
+            <input type="date" name="arrival" id="f-arrival" required>
+          </label>
+          <label class="field">
+            <span>Departure</span>
+            <input type="date" name="departure" id="f-departure" required>
+          </label>
+        </div>
+        <p class="form-error" id="f-error" role="alert"></p>
+      </div>
+      <div class="sheet-foot">
+        <button class="btn btn-primary" type="submit" id="f-submit">Create trip card</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Trip card detail -->
+  <dialog class="sheet sheet-detail" id="detail-sheet" aria-labelledby="d-city">
+    <div class="sheet-inner" id="detail"></div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
