@@ -1,8 +1,7 @@
 // Back up and restore trip cards as a file, and ask the browser to keep our storage.
 //
 // Note: no web app can survive the user choosing "Clear browsing data" — that erases
-// everything sites have stored. A backup file (in Downloads, Google Drive, email…) is
-// what survives it.
+// everything sites have stored. A backup file (e.g. in Downloads) is what survives it.
 import { getCards, getMeta, setMeta, importCards } from './store.js';
 
 const FORMAT = 'travel-advisor-backup';
@@ -26,21 +25,6 @@ export function downloadBackup() {
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 10000);
-  setMeta({ lastBackup: Date.now() });
-}
-
-export const canShareFiles = () => {
-  try {
-    return !!navigator.canShare?.({ files: [new File(['x'], 'x.json', { type: 'application/json' })] });
-  } catch {
-    return false;
-  }
-};
-
-/** Send the backup file to another app (Google Drive, email, messaging…). */
-export async function shareBackup() {
-  const file = new File([backupBlob()], fileName(), { type: 'application/json' });
-  await navigator.share({ files: [file], title: 'Travel Advisor backup' });
   setMeta({ lastBackup: Date.now() });
 }
 

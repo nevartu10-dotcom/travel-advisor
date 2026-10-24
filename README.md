@@ -38,7 +38,6 @@ Each card shows:
 Tap the cloud icon in the top bar.
 
 - **Save backup file** downloads all trips and notes as a `.json` file (Downloads on Android, Files on iPhone).
-- **Send backup to Drive, email…** (on phones that support it) hands the file to another app.
 - **Restore from backup file** adds the trips from a file; trips already on the phone with the same ID are replaced by the file's version, so restoring twice doesn't create duplicates.
 - The trips list shows a reminder when there are changes since the last backup.
 - The app asks the browser to keep its data when the phone runs low on storage.

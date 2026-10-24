@@ -2,7 +2,7 @@
 import { getCards, onChange, setMeta } from './store.js';
 import { initMap, renderPins, refreshSize, focusCard, fitAll, showPlace } from './map.js';
 import { searchPlace } from './api/geocode.js';
-import { downloadBackup, shareBackup, canShareFiles, restoreFrom, requestPersistence, needsBackup, lastBackupText } from './backup.js';
+import { downloadBackup, restoreFrom, requestPersistence, needsBackup, lastBackupText } from './backup.js';
 import { initForm, openForm } from './form.js';
 import { initDetail, openDetail } from './detail.js';
 import { flagEmoji } from './api/country.js';
@@ -78,7 +78,7 @@ let persistState = 'unsupported';
 function refreshBackupSheet() {
   const n = getCards().length;
   $('backup-status').textContent = `${n} trip${n === 1 ? '' : 's'} on this phone. ${lastBackupText()}`;
-  $('backup-save').disabled = $('backup-share').disabled = n === 0;
+  $('backup-save').disabled = n === 0;
   $('persist-status').textContent = {
     granted: 'This browser has agreed to keep the app’s data even when the phone runs low on storage.',
     denied: 'This browser may delete the app’s data if the phone runs low on storage. Keep a backup.',
@@ -99,21 +99,11 @@ function initBackup() {
     closeSheet(sheet);
   });
   $('backup-btn').addEventListener('click', openBackup);
-  $('backup-share').hidden = !canShareFiles();
   $('backup-save').addEventListener('click', () => {
     downloadBackup();
     refreshBackupSheet();
     render();
     toast('Backup file saved to your downloads');
-  });
-  $('backup-share').addEventListener('click', async () => {
-    try {
-      await shareBackup();
-      refreshBackupSheet();
-      render();
-    } catch (err) {
-      if (err.name !== 'AbortError') toast(`Couldn’t share the backup: ${err.message}`);
-    }
   });
   $('backup-restore').addEventListener('click', () => $('backup-file').click());
   $('backup-file').addEventListener('change', async (e) => {
