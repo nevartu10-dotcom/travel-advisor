@@ -1,10 +1,10 @@
 // Profile page: name, home address (→ country and currency), age, gender,
 // passport expiry and app language.
-import { getProfile, saveProfile, passportStatus } from './profile.js';
+import { getProfile, saveProfile, passportStatus, validBirthDate, ageOn } from './profile.js';
 import { searchPlace } from './api/geocode.js';
 import { currencyFor } from './data/currencies.js';
 import { flagEmoji } from './api/country.js';
-import { t, tp, lang, LANGUAGES, countryName, currencyName, longDate } from './i18n.js';
+import { t, tp, lang, LANGUAGES, countryName, currencyName, longDate, years } from './i18n.js';
 import { esc, openSheet, closeSheet, toast, isPast } from './ui.js';
 import { getCards } from './store.js';
 
@@ -22,6 +22,12 @@ function showHome() {
   $('p-currency').innerHTML = code
     ? `<strong>${esc(currencyName(code))} (${esc(code)})</strong><span class="field-note muted">${esc(t('profile.currencyAuto'))}</span>`
     : `<span class="muted">${esc(t('profile.currencyNone'))}</span>`;
+}
+
+function showAge() {
+  const v = $('p-birth').value;
+  const age = ageOn(v);
+  $('p-age-note').textContent = age != null ? t('profile.ageNote', { age: years(age) }) : '';
 }
 
 function showPassport() {
@@ -93,7 +99,8 @@ export function openProfile() {
   const p = getProfile();
   $('p-name').value = p.name || '';
   $('p-address').value = p.address || '';
-  $('p-age').value = p.age ?? '';
+  $('p-birth').value = p.birthDate || '';
+  $('p-birth').max = new Date().toISOString().slice(0, 10);
   $('p-gender').value = p.gender || '';
   $('p-passport').value = p.passportExpiry || '';
   $('p-lang').value = p.lang || lang;
@@ -102,6 +109,7 @@ export function openProfile() {
   confirmedAddress = home ? p.address || '' : '';
   showHome();
   showPassport();
+  showAge();
   openSheet($('profile-sheet'));
 }
 
@@ -120,15 +128,15 @@ export function initProfile({ saved }) {
     } else showHome();
   });
   $('p-passport').addEventListener('input', showPassport);
+  $('p-birth').addEventListener('input', showAge);
 
   $('profile-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const err = $('p-error');
     err.textContent = '';
-    const ageRaw = $('p-age').value.trim();
-    const age = ageRaw === '' ? '' : Number(ageRaw);
-    if (ageRaw !== '' && !(Number.isInteger(age) && age >= 0 && age <= 120)) {
-      err.textContent = t('profile.ageInvalid');
+    const birthDate = $('p-birth').value;
+    if (birthDate && !validBirthDate(birthDate)) {
+      err.textContent = t('profile.birthInvalid');
       return;
     }
     const btn = $('p-save');
@@ -145,7 +153,8 @@ export function initProfile({ saved }) {
         name: $('p-name').value,
         address: $('p-address').value,
         home: $('p-address').value.trim() ? home : null,
-        age,
+        birthDate,
+        age: undefined,
         gender: $('p-gender').value,
         passportExpiry: $('p-passport').value,
         lang: $('p-lang').value,

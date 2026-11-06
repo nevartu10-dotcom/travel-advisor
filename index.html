@@ -149,8 +149,9 @@
         </div>
         <div class="field-row">
           <label class="field">
-            <span data-i18n="profile.age"></span>
-            <input id="p-age" type="number" inputmode="numeric" min="0" max="120" step="1">
+            <span data-i18n="profile.birthDate"></span>
+            <input id="p-birth" type="date" min="1900-01-01" autocomplete="bday">
+            <span class="field-note muted" id="p-age-note"></span>
           </label>
           <label class="field">
             <span data-i18n="profile.gender"></span>

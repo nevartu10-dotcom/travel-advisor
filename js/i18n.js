@@ -117,6 +117,9 @@ export const number = (n, decimals = 0) => (decimals ? num1 : num0).format(n);
 const sig = new Intl.NumberFormat(locale, { maximumSignificantDigits: 4 });
 export const rateNumber = (n) => sig.format(n);
 
+const yearsFmt = new Intl.NumberFormat(locale, { style: 'unit', unit: 'year', unitDisplay: 'long' });
+export const years = (n) => yearsFmt.format(n);
+
 const hoursFmt = new Intl.NumberFormat(locale, { style: 'unit', unit: 'hour', unitDisplay: 'long', maximumFractionDigits: 2 });
 export const hours = (n) => hoursFmt.format(n);
 

@@ -292,6 +292,9 @@ main {
 .welcome-hello { margin: 0; font-size: var(--step-2); font-weight: 800; line-height: 1.15; letter-spacing: -0.01em; overflow-wrap: anywhere; }
 .welcome-line { margin: 6px 0 0; color: color-mix(in srgb, var(--chrome-ink) 82%, transparent); }
 .welcome-setup { margin-top: 12px; min-height: 40px; border-color: color-mix(in srgb, var(--chrome-ink) 40%, transparent); color: var(--chrome-ink); }
+.welcome.birthday { background: linear-gradient(135deg, #7a1f5c, #c2410c); color: #fff; }
+.welcome.birthday::before { background: repeating-linear-gradient(180deg, #fde047 0 8px, #f472b6 8px 16px, #67e8f9 16px 24px); }
+.welcome-bday { font-weight: 600; }
 .welcome-close { color: var(--chrome-ink); flex: none; margin-top: -6px; }
 @keyframes welcome-in { from { transform: translateY(-8px); opacity: 0; } to { transform: none; opacity: 1; } }
 

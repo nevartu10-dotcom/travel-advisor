@@ -64,16 +64,20 @@ with sync_playwright() as p:
     check(pg.inner_text('#appbar-title') == 'Trip map' and pg.inner_text('#tab-list') == 'List', 'English interface by default')
     shot(pg, 'p01-welcome-new.png')
 
-    # Profile: invalid age, unknown address, then a valid profile
+    # Profile: invalid birth date, unknown address, then a valid profile
     pg.click('.welcome-setup')
     pg.wait_for_selector('#profile-sheet[open]')
     check(pg.locator('#p-lang option').count() == 8, 'eight app languages offered')
     check('Add your home address' in pg.inner_text('#p-currency'), 'currency asks for an address first')
     pg.fill('#p-name', 'Tuomas Virtanen')
-    pg.fill('#p-age', '200')
+    TODAY = datetime.date.today()
+    pg.fill('#p-birth', (TODAY + datetime.timedelta(days=3)).isoformat())
     pg.click('#p-save')
-    check('between 0 and 120' in pg.inner_text('#p-error'), 'invalid age rejected')
-    pg.fill('#p-age', '45')
+    check('between 1900 and today' in pg.inner_text('#p-error'), 'future birth date rejected')
+    BIRTH = '1980-01-02' if TODAY.strftime('%m-%d') != '01-02' else '1980-01-03'
+    AGE = TODAY.year - 1980 - (1 if TODAY.strftime('%m-%d') < BIRTH[5:] else 0)
+    pg.fill('#p-birth', BIRTH)
+    check(pg.inner_text('#p-age-note') == f'Age: {AGE} years', f'age worked out from the birth date: {pg.inner_text("#p-age-note")!r}')
     pg.fill('#p-address', 'Nowhere street 999')
     pg.click('#p-save')
     pg.wait_for_function("() => document.querySelector('#p-error').textContent.includes('Couldn’t find')")
@@ -91,7 +95,7 @@ with sync_playwright() as p:
     save_profile(pg)
     check(pg.inner_text('#profile-avatar') == 'TV', 'profile button shows initials')
     prof = pg.evaluate("() => JSON.parse(localStorage.getItem('travel-advisor.profile.v1'))")
-    check(prof.get('currency') == 'EUR' and prof.get('home', {}).get('countryCode') == 'FI' and prof.get('age') == 45, 'profile saved with home country, currency and age')
+    check(prof.get('currency') == 'EUR' and prof.get('home', {}).get('countryCode') == 'FI' and prof.get('birthDate') == BIRTH and 'age' not in prof, 'profile saved with home country, currency and birth date')
 
     # Home marker on the map
     check(pg.locator('.home-pin').count() == 1 and pg.inner_text('.home-label') == 'Home', 'home shown on the map with a house icon')
@@ -151,7 +155,18 @@ with sync_playwright() as p:
     pg.wait_for_selector('#welcome:not([hidden])')
     check(pg.inner_text('.welcome-hello') == 'Tervetuloa, Tuomas!', 'welcome in home language (Finnish) with first name')
     check('Your next trip: Family summer holiday' in pg.inner_text('.welcome-line'), 'welcome mentions the next trip')
+    check(pg.locator('#welcome.birthday').count() == 0, 'no birthday greeting on other days')
     shot(pg, 'p03-welcome-fi.png')
+
+    # Birthday: greeting in the home language, age in the app language
+    bday = f'1980-{TODAY:%m-%d}' if TODAY.strftime('%m-%d') != '02-29' else '1980-02-29'
+    pg.evaluate(f"() => {{ const p = JSON.parse(localStorage.getItem('travel-advisor.profile.v1')); p.birthDate = '{bday}'; localStorage.setItem('travel-advisor.profile.v1', JSON.stringify(p)); }}")
+    pg.reload(); pg.wait_for_selector('#welcome.birthday:not([hidden])')
+    check(pg.inner_text('.welcome-hello') == '🎂 Hyvää syntymäpäivää, Tuomas!', f'birthday greeting in Finnish: {pg.inner_text(".welcome-hello")!r}')
+    check(f'You turn {TODAY.year - 1980} today' in pg.inner_text('.welcome-bday'), 'birthday line with the new age')
+    check('Your next trip' in pg.inner_text('#welcome'), 'birthday greeting still mentions the next trip')
+    shot(pg, 'p03b-birthday.png')
+    pg.evaluate(f"() => {{ const p = JSON.parse(localStorage.getItem('travel-advisor.profile.v1')); p.birthDate = '{BIRTH}'; localStorage.setItem('travel-advisor.profile.v1', JSON.stringify(p)); }}")
 
     # Switch the app to Finnish
     pg.click('#profile-btn'); pg.wait_for_selector('#profile-sheet[open]')

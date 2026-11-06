@@ -1,5 +1,5 @@
 // App entry: tabs, list rendering, wiring.
-import { applyStatic, t, tp, countryName } from './i18n.js';
+import { applyStatic, t, tp, countryName, lang } from './i18n.js';
 import { getCards, onChange, setMeta } from './store.js';
 import { initMap, renderPins, renderHome, refreshSize, focusCard, fitAll, showPlace } from './map.js';
 import { searchPlace } from './api/geocode.js';
@@ -7,7 +7,8 @@ import { downloadBackup, restoreFrom, requestPersistence, needsBackup, lastBacku
 import { initForm, openForm } from './form.js';
 import { initDetail, openDetail } from './detail.js';
 import { initProfile, openProfile } from './profile-ui.js';
-import { getProfile, hasProfile, homeWelcome, onProfileChange } from './profile.js';
+import { getProfile, hasProfile, homeWelcome, homeBirthday, isBirthday, ageOn, onProfileChange } from './profile.js';
+import { birthdayGreeting } from './data/birthday.js';
 import { flagEmoji } from './api/country.js';
 import { esc, dateRange, countdown, isPast, isNow, toast, tripTitle, tripLabel, openSheet, closeSheet } from './ui.js';
 
@@ -118,9 +119,15 @@ function showWelcome() {
       ? t('welcome.next', { title: tripTitle(next), when: countdown(next).toLocaleLowerCase() })
       : t('welcome.none');
   const box = $('welcome');
+  // On the birthday: "Happy birthday" in the home language (or the app language).
+  const bday = isBirthday(p.birthDate);
+  const APP3 = { en: 'eng', fi: 'fin', fr: 'fra', de: 'deu', nb: 'nob', pt: 'por', es: 'spa', sv: 'swe' };
+  const hello = bday ? `🎂 ${homeBirthday(p) || birthdayGreeting(APP3[lang] || 'eng', first)}` : greeting;
+  box.classList.toggle('birthday', bday);
   box.innerHTML = `
     <div class="welcome-text">
-      <p class="welcome-hello" dir="auto">${esc(greeting)}</p>
+      <p class="welcome-hello" dir="auto">${esc(hello)}</p>
+      ${bday ? `<p class="welcome-line welcome-bday">${esc(t('birthday.line', { age: ageOn(p.birthDate) }))}</p>` : ''}
       <p class="welcome-line">${esc(hasProfile(p) ? line : t('welcome.setupText'))}</p>
       ${hasProfile(p) ? '' : `<button class="btn btn-quiet welcome-setup" type="button">${esc(t('welcome.setup'))}</button>`}
     </div>
@@ -134,7 +141,7 @@ function showWelcome() {
     openProfile();
   });
   // Fade away on its own, unless the person is reading or using it.
-  welcomeTimer = setTimeout(hideWelcome, hasProfile(p) ? 7000 : 12000);
+  welcomeTimer = setTimeout(hideWelcome, bday ? 15000 : hasProfile(p) ? 7000 : 12000);
   box.addEventListener('pointerdown', () => clearTimeout(welcomeTimer), { once: true });
 }
 
