@@ -1,6 +1,7 @@
 // App entry: tabs, list rendering, wiring.
 import { applyStatic, t, tp, countryName, lang } from './i18n.js';
 import { getCards, onChange, setMeta } from './store.js';
+import { getLists } from './checklists.js';
 import { initMap, renderPins, renderHome, refreshSize, focusCard, fitAll, showPlace } from './map.js';
 import { searchPlace } from './api/geocode.js';
 import { downloadBackup, restoreFrom, requestPersistence, needsBackup, lastBackupText } from './backup.js';
@@ -9,24 +10,28 @@ import { initDetail, openDetail } from './detail.js';
 import { initProfile, openProfile } from './profile-ui.js';
 import { getProfile, hasProfile, homeWelcome, homeBirthday, isBirthday, ageOn, onProfileChange } from './profile.js';
 import { birthdayGreeting } from './data/birthday.js';
+import { seedIfNew, onListsChange, progress } from './checklists.js';
+import { initChecklists, renderChecklistsTab, warningLines } from './checklists-ui.js';
 import { flagEmoji } from './api/country.js';
 import { esc, dateRange, countdown, isPast, isNow, toast, tripTitle, tripLabel, openSheet, closeSheet } from './ui.js';
 
 const $ = (id) => document.getElementById(id);
 let view = 'map';
+const VIEWS = ['map', 'list', 'checklists'];
+const TITLES = { map: 'app.title.map', list: 'app.title.list', checklists: 'app.title.checklists' };
 
 applyStatic();
+seedIfNew();
 
 function setView(next, { focus } = {}) {
-  view = next === 'list' ? 'list' : 'map';
-  $('view-map').hidden = view !== 'map';
-  $('view-list').hidden = view !== 'list';
+  view = VIEWS.includes(next) ? next : 'map';
+  VIEWS.forEach((v) => ($('view-' + v).hidden = view !== v));
   document.querySelectorAll('.tab').forEach((tab) => {
     const on = tab.dataset.view === view;
     tab.setAttribute('aria-selected', String(on));
     tab.tabIndex = on ? 0 : -1;
   });
-  $('appbar-title').textContent = t(view === 'map' ? 'app.title.map' : 'app.title.list');
+  $('appbar-title').textContent = t(TITLES[view]);
   history.replaceState(history.state, '', '#' + view);
   try { localStorage.setItem('travel-advisor.view', view); } catch {}
   if (view === 'map') requestAnimationFrame(refreshSize);
@@ -54,7 +59,7 @@ function renderList(cards) {
           .map(
             (c) => `<li><button class="ticket${isPast(c) ? ' past' : ''}" type="button" data-id="${esc(c.id)}">
               <span class="ticket-flag" aria-hidden="true">${flagEmoji(c.countryCode)}</span>
-              <span class="ticket-main"><span class="ticket-city">${esc(tripTitle(c))}</span><span class="ticket-meta">${c.name ? `${esc(c.city)}, ` : ''}${esc(countryName(c.countryCode, c.countryName))}, ${dateRange(c.arrival, c.departure)}</span></span>
+              <span class="ticket-main"><span class="ticket-city">${esc(tripTitle(c))}</span><span class="ticket-meta">${c.name ? `${esc(c.city)}, ` : ''}${esc(countryName(c.countryCode, c.countryName))}, ${dateRange(c.arrival, c.departure)}</span>${clChip(c)}</span>
               <span class="ticket-when">${esc(countdown(c))}</span>
             </button></li>`
           )
@@ -70,9 +75,41 @@ function renderList(cards) {
   root.querySelector('[data-backup]')?.addEventListener('click', openBackup);
 }
 
+/** "🧳 9/12" on a trip in the list, when it has a checklist. */
+function clChip(c) {
+  const p = progress(c);
+  if (!p || !p.total) return '';
+  const done = !p.left;
+  return `<span class="ticket-cl${done ? ' done' : ''}">🧳 ${esc(t('cl.chip', { done: p.done, total: p.total }))}${done ? ' ✓' : ''}</span>`;
+}
+
+/* ---------- Unfinished checklist warning ---------- */
+
+// Shown when the app opens; later changes only update it (or hide it once done).
+let warnActive = false;
+function renderWarning({ opening = false } = {}) {
+  const box = $('cl-warn');
+  if (opening) warnActive = true;
+  const lines = warnActive ? warningLines() : [];
+  if (!lines.length) warnActive = false;
+  box.hidden = !lines.length;
+  if (!lines.length) return;
+  box.innerHTML = `
+    <svg class="cl-warn-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4m0 3h.01M10.3 4.3 2.6 18a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0Z"/></svg>
+    <div class="cl-warn-text">
+      <p class="cl-warn-title">${esc(t('cl.warn.title'))}</p>
+      ${lines.map((l) => `<p>${esc(l.text)} <button class="cl-warn-open" type="button" data-id="${esc(l.id)}">${esc(t('cl.warn.open'))}</button></p>`).join('')}
+    </div>
+    <button class="icon-btn cl-warn-close" type="button" aria-label="${esc(t('close'))}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>`;
+}
+
 function render() {
   const cards = getCards();
   renderList(cards);
+  renderChecklistsTab();
+  renderWarning();
   renderPins(cards);
   renderHome(getProfile().home);
   $('map-hint').textContent = t(cards.length ? 'hint.pins' : 'hint.empty');
@@ -152,7 +189,7 @@ let persistState = 'unsupported';
 function refreshBackupSheet() {
   const n = getCards().length;
   $('backup-status').textContent = `${tp('backup.trips', n)} ${lastBackupText()}`;
-  $('backup-save').disabled = n === 0 && !hasProfile();
+  $('backup-save').disabled = n === 0 && !hasProfile() && !getLists().length;
   $('persist-status').textContent = t(`backup.persist.${persistState}`);
 }
 
@@ -182,7 +219,7 @@ function initBackup() {
     if (!file) return;
     const wasBackedUp = !needsBackup();
     try {
-      const { added, updated, skipped, profile } = await restoreFrom(file);
+      const { added, updated, skipped, profile, lists } = await restoreFrom(file);
       // If nothing here was unsaved before, what's here now matches a backup.
       if (wasBackedUp) setMeta({ lastBackup: Date.now() });
       const parts = [
@@ -190,6 +227,7 @@ function initBackup() {
         updated && t('backup.updated', { n: updated }),
         skipped && t('backup.skipped', { n: skipped }),
         profile && t('backup.profile'),
+        lists && tp('backup.lists', lists),
       ].filter(Boolean);
       toast(t('backup.restored', { parts: parts.join(', ') }));
       refreshBackupSheet();
@@ -258,6 +296,22 @@ function start() {
   });
   initDetail({ deleted: (card) => toast(t('toast.deleted', { title: tripLabel(card) })) });
   initBackup();
+  initChecklists();
+  onListsChange(render);
+  window.addEventListener('show-checklists', () => {
+    closeSheet($('detail-sheet'));
+    setView('checklists');
+  });
+  $('cl-warn').addEventListener('click', (e) => {
+    const open = e.target.closest('.cl-warn-open');
+    if (open) {
+      hideWelcome();
+      openDetail(open.dataset.id, { focus: 'checklist' });
+    } else if (e.target.closest('.cl-warn-close')) {
+      warnActive = false;
+      renderWarning();
+    }
+  });
   initProfile({ saved: () => render() });
   let lastHome = JSON.stringify([getProfile().home?.lat, getProfile().home?.lon]);
   onProfileChange((p) => {
@@ -277,7 +331,8 @@ function start() {
 
   document.querySelectorAll('.tab').forEach((tab) => tab.addEventListener('click', () => setView(tab.dataset.view)));
   document.querySelector('.tabbar').addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') setView(view === 'map' ? 'list' : 'map', { focus: true });
+    const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+    if (step) setView(VIEWS[(VIEWS.indexOf(view) + step + VIEWS.length) % VIEWS.length], { focus: true });
   });
   $('add-btn').addEventListener('click', () => openForm());
   $('map-search').addEventListener('submit', searchMap);
@@ -310,6 +365,7 @@ function start() {
   }
   setView(initial);
   render();
+  renderWarning({ opening: true });
   renderAvatar();
   showWelcome();
   if (view === 'map') setTimeout(() => fitAll(getCards()), 100);

@@ -85,7 +85,7 @@ export function validCard(c) {
   );
 }
 
-const TEXT_FIELDS = ['id', 'name', 'type', 'city', 'address', 'region', 'countryName', 'countryCode', 'label', 'arrival', 'departure', 'notes', 'createdAt'];
+const TEXT_FIELDS = ['id', 'name', 'type', 'city', 'address', 'region', 'countryName', 'countryCode', 'label', 'arrival', 'departure', 'notes', 'createdAt', 'checklistId'];
 
 function cleanCard(c) {
   const out = {};
@@ -93,6 +93,7 @@ function cleanCard(c) {
   out.lat = Number(c.lat);
   out.lon = Number(c.lon);
   out.countryCode = out.countryCode.toUpperCase();
+  if (Array.isArray(c.checked)) out.checked = c.checked.filter((x) => typeof x === 'string').slice(0, 500).map((x) => x.slice(0, 80));
   if (!out.id) out.id = (crypto.randomUUID && crypto.randomUUID()) || String(Date.now()) + Math.random().toString(16).slice(2);
   return out;
 }

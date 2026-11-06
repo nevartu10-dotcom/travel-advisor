@@ -34,7 +34,10 @@
   </header>
 
   <main>
-    <div class="welcome" id="welcome" role="status" hidden></div>
+    <div class="top-notes">
+      <div class="welcome" id="welcome" role="status" hidden></div>
+      <div class="cl-warn" id="cl-warn" role="alert" hidden></div>
+    </div>
 
     <section class="view view-map" id="view-map" aria-labelledby="tab-map" role="tabpanel">
       <div id="map" class="map" data-i18n-aria="aria.mapOfTrips"></div>
@@ -55,6 +58,13 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
       </button>
     </section>
+
+    <section class="view view-checklists" id="view-checklists" aria-labelledby="tab-checklists" role="tabpanel" hidden>
+      <div class="list-wrap" id="checklists"></div>
+      <button class="fab" id="add-list-btn" type="button" data-i18n-aria="aria.addChecklist">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+    </section>
   </main>
 
   <nav class="tabbar" role="tablist" data-i18n-aria="aria.views">
@@ -65,6 +75,10 @@
     <button class="tab" id="tab-list" role="tab" aria-controls="view-list" data-view="list" type="button">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>
       <span data-i18n="tab.list"></span>
+    </button>
+    <button class="tab" id="tab-checklists" role="tab" aria-controls="view-checklists" data-view="checklists" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="m7.5 9 1.5 1.5L12 7.5M7.5 15l1.5 1.5 3-3M14 9h3M14 15h3"/></svg>
+      <span data-i18n="tab.checklists"></span>
     </button>
   </nav>
 
@@ -120,6 +134,22 @@
   <!-- Trip card detail -->
   <dialog class="sheet sheet-detail" id="detail-sheet" aria-labelledby="d-city">
     <div class="sheet-inner" id="detail"></div>
+  </dialog>
+
+  <!-- Checklist editor -->
+  <dialog class="sheet" id="list-sheet" aria-labelledby="list-title">
+    <div class="sheet-inner">
+      <div class="sheet-head">
+        <button class="icon-btn" type="button" data-close data-i18n-aria="close">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+        <h2 id="list-title" data-i18n="cl.editTitle"></h2>
+      </div>
+      <div class="sheet-body form-body" id="list-body"></div>
+      <div class="sheet-foot">
+        <button class="btn btn-primary" type="button" id="list-done" data-i18n="cl.done"></button>
+      </div>
+    </div>
   </dialog>
 
   <!-- Profile -->

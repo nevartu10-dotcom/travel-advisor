@@ -102,7 +102,7 @@ main {
   position: fixed; inset: auto 0 0 0; z-index: 500;
   height: calc(var(--tabbar-h) + var(--safe-b));
   padding-bottom: var(--safe-b);
-  display: grid; grid-template-columns: 1fr 1fr;
+  display: grid; grid-template-columns: repeat(3, 1fr);
   background: var(--surface); border-top: 1px solid var(--rule);
 }
 .tab {
@@ -278,8 +278,14 @@ main {
 .avatar.has-initials { background: var(--red); border-color: var(--red); color: #fff; }
 
 /* Welcome */
-.welcome {
+.top-notes {
   position: absolute; z-index: 480; top: 12px; left: 12px; right: 12px; max-width: 560px; margin: 0 auto;
+  display: grid; gap: 8px; pointer-events: none;
+}
+.top-notes > * { pointer-events: auto; }
+.top-notes > [hidden] { display: none; }
+.welcome {
+  position: relative;
   display: flex; gap: 8px; align-items: flex-start; padding: 16px 8px 16px 18px; border-radius: 8px;
   background: var(--chrome); color: var(--chrome-ink); box-shadow: 0 10px 28px rgb(13 20 36 / 0.35);
   overflow: hidden; animation: welcome-in 0.35s ease-out;
@@ -529,3 +535,53 @@ main {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* Checklists */
+.cl-intro { margin: 0 0 12px; }
+.cl-lists { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.cl-row {
+  display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 2px;
+  padding-right: 6px; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface);
+}
+.cl-open { border: 0; background: none; text-align: left; cursor: pointer; padding: 14px 8px 14px 16px; min-width: 0; color: inherit; }
+.cl-name { display: block; font-size: var(--step-1); font-weight: 600; line-height: 1.2; overflow-wrap: anywhere; }
+.cl-row .icon-btn svg { width: 22px; height: 22px; }
+.icon-btn.danger { color: var(--danger); }
+.cl-edit-items, .cl-checks { list-style: none; margin: 0; padding: 0; display: grid; }
+.cl-edit-items li, .cl-checks li { display: flex; align-items: center; gap: 4px; border-bottom: 1px solid var(--rule); }
+.cl-edit-items li.cl-none { border: 0; padding: 8px 0; }
+.cl-text {
+  flex: 1; min-width: 0; min-height: 44px; padding: 8px 6px; border: 1px solid transparent; border-radius: 4px;
+  background: transparent; color: var(--ink); font: inherit;
+}
+.cl-text:focus { outline: none; border-color: var(--blue); background: var(--surface); }
+.cl-edit-items .icon-btn, .cl-checks .icon-btn { flex: none; color: var(--slate); width: 40px; height: 40px; }
+.cl-add { margin-top: 10px; }
+.cl-add input {
+  min-height: 48px; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); font: inherit;
+}
+.cl-add input:focus { border-color: var(--blue); outline: none; box-shadow: 0 0 0 3px rgb(29 79 156 / 0.2); }
+.cl-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.cl-actions .btn svg { width: 20px; height: 20px; }
+.cl-pick { margin-bottom: 14px; }
+.cl-progress { display: grid; gap: 6px; margin-bottom: 6px; font-weight: 600; }
+.cl-progress .ok { color: var(--ok); }
+.cl-bar { height: 6px; border-radius: 3px; background: var(--rule); overflow: hidden; }
+.cl-bar i { display: block; height: 100%; width: 0; background: var(--ok); transition: width 0.2s; }
+.cl-check { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; min-height: 48px; cursor: pointer; overflow-wrap: anywhere; }
+.cl-check input { flex: none; width: 22px; height: 22px; accent-color: var(--ok); }
+.cl-check input:checked + span { color: var(--slate); text-decoration: line-through; }
+.ticket-cl { display: inline-block; margin-top: 4px; font-size: var(--step--1); font-weight: 600; color: var(--warn); }
+.ticket-cl.done { color: var(--ok); }
+.cl-warn {
+  display: flex; gap: 10px; align-items: flex-start; padding: 12px 6px 12px 14px; border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--warn) 55%, transparent);
+  background: color-mix(in srgb, var(--warn) 12%, var(--surface)); color: var(--ink);
+  box-shadow: 0 10px 28px rgb(13 20 36 / 0.25); animation: welcome-in 0.35s ease-out;
+}
+.cl-warn-icon { flex: none; width: 24px; height: 24px; color: var(--warn); margin-top: 2px; }
+.cl-warn-text { flex: 1; min-width: 0; }
+.cl-warn-text p { margin: 0 0 4px; }
+.cl-warn-title { font-weight: 700; }
+.cl-warn-open { border: 0; background: none; padding: 0; color: var(--blue); font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; }
+.cl-warn-close { flex: none; margin-top: -6px; }

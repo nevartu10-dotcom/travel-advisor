@@ -39,9 +39,21 @@ Tap the round profile button at the top right.
 - **Birthday greeting:** on your birthday the welcome turns festive and says happy birthday in your home language (e.g. "Hyvää syntymäpäivää, Tuomas!") with your new age. It appears when you open the app that day; there are no push notifications, because the app has no server. 29 February birthdays are greeted on 28 February in other years.
 - **App language:** English, Finnish, French, German, Norwegian, Portuguese, Spanish or Swedish. Buttons, labels, dates and numbers follow the language. Content from Wikipedia, Wikivoyage and other sources stays in English.
 
+## Checklists
+
+The third tab, **Checklists**, holds your packing and to-do lists. A starter "Packing list" is there the first time you open it.
+
+- **Create** a list with **+**, give it a name and add items. Changes are saved as you go.
+- **Edit** a list by tapping it: rename it, edit item text, add or remove items.
+- **Copy** a list (copy icon, or Copy in the editor) to start a new one from it, e.g. "Winter holiday" from "Packing list".
+- **Delete** a list (bin icon, or Delete in the editor). If trips use it, the app says so first, and those trips are left without a checklist.
+- **In a trip card**, the Checklist section lets you pick which list the trip uses, tick items as you pack or get them done, and add or remove items. Items you add or remove there are saved to the checklist itself, so other trips that use the same list see them too. **Ticks belong to the trip**, so one list can be reused for many trips.
+- The trips list shows progress (e.g. 🧳 9/12) for trips with a checklist.
+- **Warning:** when you open the app within 24 hours before a trip's arrival day (or on the arrival day itself) and its checklist has unticked items, a warning on the start page lists what's left, with a link straight to the checklist. Trips have dates but no departure time, so the 24 hours count from the start of the arrival day. Like the birthday greeting, it shows when you open the app; there are no push notifications.
+
 ## Data and privacy
 
-- **Only your trip cards (including your notes) and your profile are stored**, in your browser's local storage on your device. There is no account and no server of our own.
+- **Only your trip cards (including your notes), your profile and your checklists are stored**, in your browser's local storage on your device. There is no account and no server of our own.
 - Everything inside a card is fetched live from the public services above each time you open it.
 - For offline use while travelling, the service worker keeps the app itself, map tiles you've viewed, and the most recent answer from each service. Fresh data is always tried first.
 - Languages, plug types and phrases are stable reference data, so they ship with the app instead of being fetched. (restcountries.com, used at first, now requires a private API key, which can't be kept secret in a web app.)
@@ -50,8 +62,8 @@ Tap the round profile button at the top right.
 
 Tap the cloud icon in the top bar.
 
-- **Save backup file** downloads all trips and notes as a `.json` file (Downloads on Android, Files on iPhone).
-- **Restore from backup file** adds the trips from a file; trips already on the phone with the same ID are replaced by the file's version, so restoring twice doesn't create duplicates.
+- **Save backup file** downloads all trips, notes, ticks, checklists and your profile as a `.json` file (Downloads on Android, Files on iPhone).
+- **Restore from backup file** adds the trips and checklists from a file; trips already on the phone with the same ID are replaced by the file's version, so restoring twice doesn't create duplicates.
 - The trips list shows a reminder when there are changes since the last backup.
 - The app asks the browser to keep its data when the phone runs low on storage.
 
@@ -82,6 +94,7 @@ End-to-end test with all external services mocked (needs Python Playwright):
 python3 -m http.server 8765 &
 python3 tests/e2e.py              # add --shots DIR to save screenshots
 python3 tests/e2e_profile.py      # profile, languages, welcome, passport
+python3 tests/e2e_checklists.py   # checklists tab, card checklist, warning, backup
 ```
 
 ## Project layout

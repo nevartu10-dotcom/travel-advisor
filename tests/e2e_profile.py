@@ -238,7 +238,7 @@ with sync_playwright() as p:
         pg.click('#backup-save')
     path = dl.value.path()
     data = json.loads(open(path).read())
-    check(data.get('version') == 2 and data.get('profile', {}).get('name') == 'Tuomas Virtanen', 'backup file includes the profile')
+    check(data.get('version') == 3 and data.get('profile', {}).get('name') == 'Tuomas Virtanen', 'backup file includes the profile')
     pg.click('#backup-sheet [data-close]')
     pg.evaluate('() => localStorage.clear()'); pg.reload()
     check(pg.inner_text('.welcome-hello') == 'Welcome!', 'after clearing data the profile is gone')
