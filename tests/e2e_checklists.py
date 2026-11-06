@@ -123,7 +123,7 @@ with sync_playwright() as p:
     shot(pg, 'c02b-reorder.png')
     close_editor(pg)
 
-    # Trip card: choose a list, tick, add and remove items
+    # Trip card: choose a list and tick items; no editing on the card
     open_trip(pg, 'Oslo meeting')
     pg.locator('#d-checklist-sec').scroll_into_view_if_needed()
     check(pg.locator('#d-cl option').count() == 4, 'card offers no checklist plus the three lists')
@@ -132,15 +132,16 @@ with sync_playwright() as p:
     check(pg.inner_text('#d-cl-progress') == '0 of 2 done', 'progress shown')
     pg.locator('.cl-checks li', has_text='Laptop').locator('input').check()
     check(pg.inner_text('#d-cl-progress') == '1 of 2 done', 'ticking updates progress')
-    pg.fill('.cl-add input', 'Visa card'); pg.press('.cl-add input', 'Enter')
-    pg.fill('.cl-add input', 'Umbrella'); pg.press('.cl-add input', 'Enter')
-    check(pg.inner_text('#d-cl-progress') == '1 of 4 done', 'items added from the card')
-    pg.locator('.cl-checks li', has_text='Umbrella').locator('[data-remove]').click()
-    biz = next(l for l in lists(pg) if l['id'] == biz['id'])
-    check([i['text'] for i in biz['items']] == ['Laptop and charger', 'Presentation slides', 'Visa card'], 'card edits saved to the checklist itself')
-    check(pg.locator('.cl-checks li', has_text='Laptop').locator('input').is_checked(), 'ticks survive re-render')
+    check(card(pg, 'osl').get('checked') == [biz['items'][0]['id']], 'tick saved on the trip')
+    sec = pg.locator('#d-checklist-sec')
+    check(sec.locator('.cl-add, [data-remove], .drag-handle').count() == 0, 'card has no add, remove or reorder controls')
+    close_trip(pg)
 
-    # Drag "Visa card" (last) to the top by its handle
+    # Editing happens in the Checklists tab: add an item, drag to reorder
+    pg.click('#tab-checklists')
+    pg.locator('.cl-row', has_text='Business trip').locator('[data-list-edit]').click(); pg.wait_for_selector('#list-sheet[open]')
+    pg.fill('#le-new', 'Visa card'); pg.press('#le-new', 'Enter')
+
     def drag(src, dst, above=True):
         a = src.locator('.drag-handle').bounding_box(); t_ = dst.bounding_box()
         pg.mouse.move(a['x'] + a['width'] / 2, a['y'] + a['height'] / 2); pg.mouse.down()
@@ -148,17 +149,21 @@ with sync_playwright() as p:
         for k in range(1, 11):
             pg.mouse.move(a['x'] + a['width'] / 2, a['y'] + a['height'] / 2 + (ty - a['y'] - a['height'] / 2) * k / 10)
         pg.mouse.up(); pg.wait_for_timeout(100)
-    drag(pg.locator('.cl-checks li', has_text='Visa card'), pg.locator('.cl-checks li').first)
+    items = pg.locator('#le-items li')
+    drag(items.nth(2), items.first)
     order = [i['text'] for i in next(l for l in lists(pg) if l['id'] == biz['id'])['items']]
-    check(order == ['Visa card', 'Laptop and charger', 'Presentation slides'], f'drag to reorder on the card {order}')
-    check([x.strip() for x in pg.locator('.cl-checks li').all_inner_texts()] == order, 'card shows the new order')
-    check(pg.locator('.cl-checks li', has_text='Laptop').locator('input').is_checked(), 'ticks kept after reordering')
-    drag(pg.locator('.cl-checks li', has_text='Visa card'), pg.locator('.cl-checks li').last, above=False)
+    check(order == ['Visa card', 'Laptop and charger', 'Presentation slides'], f'drag to reorder in the editor {order}')
+    check([x.input_value() for x in pg.locator('#le-items input').all()] == order, 'editor shows the new order')
+    drag(items.first, items.last, above=False)
     order = [i['text'] for i in next(l for l in lists(pg) if l['id'] == biz['id'])['items']]
     check(order == ['Laptop and charger', 'Presentation slides', 'Visa card'], f'drag down to the end {order}')
-    pg.locator('.cl-checks li').first.locator('input').click()  # a tap on the text still ticks, not drags
-    check(not pg.locator('.cl-checks li').first.locator('input').is_checked(), 'tapping an item toggles it, no accidental drag')
-    pg.locator('.cl-checks li').first.locator('input').click()
+    close_editor(pg)
+    biz = next(l for l in lists(pg) if l['id'] == biz['id'])
+    open_trip(pg, 'Oslo meeting')
+    check([x.strip() for x in pg.locator('.cl-checks li').all_inner_texts()] == order, 'card shows items and order from the tab')
+    check(pg.inner_text('#d-cl-progress') == '1 of 3 done' and pg.locator('.cl-checks li', has_text='Laptop').locator('input').is_checked(),
+          'ticks kept after editing the list')
+    pg.locator('#d-checklist-sec').scroll_into_view_if_needed()
     shot(pg, 'c03-card.png')
     close_trip(pg)
 

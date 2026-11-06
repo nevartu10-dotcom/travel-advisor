@@ -45,10 +45,10 @@ The third tab, **Checklists**, holds your packing and to-do lists. A starter "Pa
 
 - **Create** a list with **+**, give it a name and add items. Changes are saved as you go.
 - **Edit** a list by tapping it: rename it, edit item text, add or remove items.
-- **Reorder** items by dragging the ⋮⋮ handle on the left, in the editor or in a trip card. Holding an item near the top or bottom edge scrolls the list. With a keyboard, focus the handle and press the up or down arrow keys.
+- **Reorder** items by dragging the ⋮⋮ handle on the left in the editor. Holding an item near the top or bottom edge scrolls the list. With a keyboard, focus the handle and press the up or down arrow keys.
 - **Copy** a list (copy icon, or Copy in the editor) to start a new one from it, e.g. "Winter holiday" from "Packing list".
 - **Delete** a list (bin icon, or Delete in the editor). If trips use it, the app says so first, and those trips are left without a checklist.
-- **In a trip card**, the Checklist section lets you pick which list the trip uses, tick items as you pack or get them done, and add or remove items. Items you add or remove there are saved to the checklist itself, so other trips that use the same list see them too. **Ticks belong to the trip**, so one list can be reused for many trips.
+- **In a trip card**, the Checklist section lets you pick which list the trip uses and tick items as you pack or get them done. Items are added, removed and reordered only in the Checklists tab. **Ticks belong to the trip**, so one list can be reused for many trips.
 - The trips list shows progress (e.g. 🧳 9/12) for trips with a checklist.
 - **Warning:** when you open the app within 24 hours before a trip's arrival day (or on the arrival day itself) and its checklist has unticked items, a warning on the start page lists what's left, with a link straight to the checklist. Trips have dates but no departure time, so the 24 hours count from the start of the arrival day. Like the birthday greeting, it shows when you open the app; there are no push notifications.
 

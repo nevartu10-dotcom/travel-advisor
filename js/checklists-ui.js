@@ -188,7 +188,7 @@ export function initChecklists() {
 
 /* ---------- Trip card section ---------- */
 
-/** Checklist picker, tick boxes and item editing inside a trip card. */
+/** Checklist picker and tick boxes inside a trip card. Items are edited only in the Checklists tab. */
 export function renderCardChecklist(card, el) {
   const lists = getLists();
   if (!lists.length) {
@@ -211,17 +211,10 @@ export function renderCardChecklist(card, el) {
       <div class="cl-progress" aria-live="polite"><span id="d-cl-progress"></span><span class="cl-bar"><i id="d-cl-bar"></i></span></div>
       <ul class="cl-checks">${list.items
         .map((i) => `<li data-id="${esc(i.id)}">
-          ${handle(i)}
           <label class="cl-check"><input type="checkbox"${ticked.has(i.id) ? ' checked' : ''}><span>${esc(i.text)}</span></label>
-          <button class="icon-btn" type="button" data-remove aria-label="${esc(t('cl.removeItem', { item: i.text }))}">${ICON.x}</button>
         </li>`)
         .join('')}</ul>
-      ${list.items.length ? '' : `<p class="muted">${esc(t('cl.noItems'))}</p>`}
-      <form class="field-inline cl-add" autocomplete="off">
-        <input maxlength="${MAX_TEXT}" placeholder="${esc(t('cl.addPh'))}" aria-label="${esc(t('cl.addPh'))}" enterkeyhint="done">
-        <button class="btn btn-quiet" type="submit">${esc(t('cl.add'))}</button>
-      </form>
-      <p class="field-note muted">${esc(t('cl.shared', { name: list.name }))}</p>` : ''}`;
+      ${list.items.length ? '' : `<p class="muted">${esc(t('cl.emptyList'))}</p>`}` : ''}`;
 
   const showProgress = () => {
     const p = progress(card, getList(list.id));
@@ -237,10 +230,6 @@ export function renderCardChecklist(card, el) {
   });
   if (!list) return;
   showProgress();
-  makeSortable(el.querySelector('.cl-checks'), (itemId, to) => {
-    moveItem(list.id, itemId, to);
-    renderCardChecklist(card, el);
-  });
   el.querySelector('.cl-checks').addEventListener('change', (e) => {
     const id = e.target.closest('li')?.dataset.id;
     if (!id) return;
@@ -250,20 +239,6 @@ export function renderCardChecklist(card, el) {
     card.checked = [...set];
     updateCard(card.id, { checked: card.checked });
     showProgress();
-  });
-  el.querySelector('.cl-checks').addEventListener('click', (e) => {
-    const li = e.target.closest('[data-remove]')?.closest('li');
-    if (!li) return;
-    removeItem(list.id, li.dataset.id);
-    renderCardChecklist(card, el);
-  });
-  el.querySelector('.cl-add').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const input = e.target.querySelector('input');
-    if (addItem(list.id, input.value)) {
-      renderCardChecklist(card, el);
-      el.querySelector('.cl-add input').focus();
-    }
   });
 }
 
