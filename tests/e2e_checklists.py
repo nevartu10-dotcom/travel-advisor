@@ -113,6 +113,16 @@ with sync_playwright() as p:
     pack = next(l for l in lists(pg) if l['name'] == 'Packing list')
     check(len(pack['items']) == 12, 'original list unchanged by editing the copy')
 
+    # Keyboard reorder in the editor: arrow down on the first item's handle
+    pg.locator('.cl-row', has_text='Winter holiday').locator('[data-list-edit]').click(); pg.wait_for_selector('#list-sheet[open]')
+    first = pg.locator('#le-items li').first.locator('input').input_value()
+    pg.locator('#le-items li').first.locator('.drag-handle').focus(); pg.keyboard.press('ArrowDown')
+    win2 = next(l for l in lists(pg) if l['name'] == 'Winter holiday')
+    check(win2['items'][1]['text'] == first and pg.evaluate("document.activeElement.closest('li').dataset.id") == win2['items'][1]['id'],
+          'arrow key moves an item and keeps focus on it')
+    shot(pg, 'c02b-reorder.png')
+    close_editor(pg)
+
     # Trip card: choose a list, tick, add and remove items
     open_trip(pg, 'Oslo meeting')
     pg.locator('#d-checklist-sec').scroll_into_view_if_needed()
@@ -129,6 +139,26 @@ with sync_playwright() as p:
     biz = next(l for l in lists(pg) if l['id'] == biz['id'])
     check([i['text'] for i in biz['items']] == ['Laptop and charger', 'Presentation slides', 'Visa card'], 'card edits saved to the checklist itself')
     check(pg.locator('.cl-checks li', has_text='Laptop').locator('input').is_checked(), 'ticks survive re-render')
+
+    # Drag "Visa card" (last) to the top by its handle
+    def drag(src, dst, above=True):
+        a = src.locator('.drag-handle').bounding_box(); t_ = dst.bounding_box()
+        pg.mouse.move(a['x'] + a['width'] / 2, a['y'] + a['height'] / 2); pg.mouse.down()
+        ty = t_['y'] + (4 if above else t_['height'] - 4)
+        for k in range(1, 11):
+            pg.mouse.move(a['x'] + a['width'] / 2, a['y'] + a['height'] / 2 + (ty - a['y'] - a['height'] / 2) * k / 10)
+        pg.mouse.up(); pg.wait_for_timeout(100)
+    drag(pg.locator('.cl-checks li', has_text='Visa card'), pg.locator('.cl-checks li').first)
+    order = [i['text'] for i in next(l for l in lists(pg) if l['id'] == biz['id'])['items']]
+    check(order == ['Visa card', 'Laptop and charger', 'Presentation slides'], f'drag to reorder on the card {order}')
+    check([x.strip() for x in pg.locator('.cl-checks li').all_inner_texts()] == order, 'card shows the new order')
+    check(pg.locator('.cl-checks li', has_text='Laptop').locator('input').is_checked(), 'ticks kept after reordering')
+    drag(pg.locator('.cl-checks li', has_text='Visa card'), pg.locator('.cl-checks li').last, above=False)
+    order = [i['text'] for i in next(l for l in lists(pg) if l['id'] == biz['id'])['items']]
+    check(order == ['Laptop and charger', 'Presentation slides', 'Visa card'], f'drag down to the end {order}')
+    pg.locator('.cl-checks li').first.locator('input').click()  # a tap on the text still ticks, not drags
+    check(not pg.locator('.cl-checks li').first.locator('input').is_checked(), 'tapping an item toggles it, no accidental drag')
+    pg.locator('.cl-checks li').first.locator('input').click()
     shot(pg, 'c03-card.png')
     close_trip(pg)
 

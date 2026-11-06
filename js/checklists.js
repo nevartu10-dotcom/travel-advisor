@@ -96,6 +96,18 @@ export function editItem(listId, itemId, text) {
   change(listId, (l) => ({ ...l, items: l.items.map((i) => (i.id === itemId ? { ...i, text: clean } : i)) }));
 }
 
+/** Move an item to a new position in its list. */
+export function moveItem(listId, itemId, to) {
+  change(listId, (l) => {
+    const items = [...l.items];
+    const from = items.findIndex((i) => i.id === itemId);
+    if (from < 0) return l;
+    const [it] = items.splice(from, 1);
+    items.splice(Math.max(0, Math.min(to, items.length)), 0, it);
+    return { ...l, items };
+  });
+}
+
 export function removeItem(listId, itemId) {
   change(listId, (l) => ({ ...l, items: l.items.filter((i) => i.id !== itemId) }));
 }

@@ -1,5 +1,6 @@
 // Checklists tab (list of checklists, editor sheet) and the checklist section of a trip card.
-import { getLists, getList, createList, copyList, renameList, deleteList, addItem, editItem, removeItem, progress, MAX_TEXT } from './checklists.js';
+import { getLists, getList, createList, copyList, renameList, deleteList, addItem, editItem, removeItem, moveItem, progress, MAX_TEXT } from './checklists.js';
+import { makeSortable } from './sortable.js';
 import { getCards, updateCard } from './store.js';
 import { t, tp } from './i18n.js';
 import { esc, openSheet, closeSheet, confirmDialog, toast, tripTitle } from './ui.js';
@@ -10,6 +11,7 @@ const usedBy = (id) => getCards().filter((c) => c.checklistId === id);
 const ICON = {
   copy: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>',
   trash: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
+  grip: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01"/></svg>',
   x: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg>',
 };
 
@@ -60,12 +62,15 @@ function newList() {
 
 let editing = null; // { id, fresh }
 
+const handle = (i) => `<button class="drag-handle" type="button" aria-label="${esc(t('cl.moveItem', { item: i.text }))}">${ICON.grip}</button>`;
+
 function renderEditorItems() {
   const list = getList(editing.id);
   const ul = $('le-items');
   ul.innerHTML = list.items.length
     ? list.items
         .map((i) => `<li data-id="${esc(i.id)}">
+          ${handle(i)}
           <input class="cl-text" value="${esc(i.text)}" maxlength="${MAX_TEXT}" aria-label="${esc(t('cl.itemAria'))}">
           <button class="icon-btn" type="button" data-remove aria-label="${esc(t('cl.removeItem', { item: i.text }))}">${ICON.x}</button>
         </li>`)
@@ -108,6 +113,10 @@ export function openEditor(id, { fresh = false } = {}) {
       $('le-items').lastElementChild?.scrollIntoView({ block: 'nearest' });
     }
     $('le-new').focus();
+  });
+  makeSortable($('le-items'), (itemId, to) => {
+    moveItem(id, itemId, to);
+    renderEditorItems();
   });
   $('le-items').addEventListener('change', (e) => {
     const li = e.target.closest('li[data-id]');
@@ -202,6 +211,7 @@ export function renderCardChecklist(card, el) {
       <div class="cl-progress" aria-live="polite"><span id="d-cl-progress"></span><span class="cl-bar"><i id="d-cl-bar"></i></span></div>
       <ul class="cl-checks">${list.items
         .map((i) => `<li data-id="${esc(i.id)}">
+          ${handle(i)}
           <label class="cl-check"><input type="checkbox"${ticked.has(i.id) ? ' checked' : ''}><span>${esc(i.text)}</span></label>
           <button class="icon-btn" type="button" data-remove aria-label="${esc(t('cl.removeItem', { item: i.text }))}">${ICON.x}</button>
         </li>`)
@@ -227,6 +237,10 @@ export function renderCardChecklist(card, el) {
   });
   if (!list) return;
   showProgress();
+  makeSortable(el.querySelector('.cl-checks'), (itemId, to) => {
+    moveItem(list.id, itemId, to);
+    renderCardChecklist(card, el);
+  });
   el.querySelector('.cl-checks').addEventListener('change', (e) => {
     const id = e.target.closest('li')?.dataset.id;
     if (!id) return;

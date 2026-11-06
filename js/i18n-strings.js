@@ -293,6 +293,7 @@ const EN = {
   'cl.addPh': 'Add an item',
   'cl.add': 'Add',
   'cl.removeItem': 'Remove “{item}”',
+  'cl.moveItem': 'Move “{item}” (drag, or use the arrow keys)',
   'cl.noItems': 'No items yet. Add the first one below.',
   'cl.done': 'Done',
   'cl.autosave': 'Changes are saved as you go.',
