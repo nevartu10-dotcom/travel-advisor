@@ -42,7 +42,7 @@ with sync_playwright() as p:
     check(pg.locator('#splash').count() == 0, 'not replayed on reload in the same session (e.g. language change)')
     man = pg.evaluate("() => fetch('manifest.webmanifest').then(r => r.json())")
     check(man['name'] == 'Prepvoy' and man['short_name'] == 'Prepvoy', 'install name is Prepvoy')
-    check(pg.evaluate("() => fetch('icons/icon.svg').then(r => r.text())").count('stroke="#c8102e"') == 1, 'icon has the check-mark pin')
+    check(pg.evaluate("() => fetch('icons/icon.svg').then(r => r.text())").count('stroke="#0abaff"') == 1, 'icon has the check-mark pin')
 
     # Reduced motion: shorter, no movement
     ctx2 = b.new_context(viewport={'width': 390, 'height': 844}, service_workers='block', reduced_motion='reduce')

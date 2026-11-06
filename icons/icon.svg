@@ -1,17 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- Prepvoy: a map pin with a check mark (a trip that's prepared), in the airmail frame -->
-  <defs>
-    <pattern id="air" width="64" height="64" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-      <rect width="20" height="64" fill="#c8102e"/>
-      <rect x="32" width="20" height="64" fill="#1d4f9c"/>
-    </pattern>
-    <clipPath id="r"><rect width="512" height="512" rx="112"/></clipPath>
-  </defs>
+  <!-- Prepvoy: a map pin with a check mark (a trip that's prepared), in a blue frame -->
+  <defs><clipPath id="r"><rect width="512" height="512" rx="112"/></clipPath></defs>
   <g clip-path="url(#r)">
     <rect width="512" height="512" fill="#fff"/>
-    <rect x="34" y="34" width="444" height="444" rx="84" fill="url(#air)"/>
+    <rect x="34" y="34" width="444" height="444" rx="84" fill="#0abaff"/>
     <rect x="72" y="72" width="368" height="368" rx="56" fill="#14213D"/>
     <path d="M256 392c-26-38-100-104-100-172a100 100 0 0 1 200 0c0 68-74 134-100 172Z" fill="#fff"/>
-    <path d="M212 222l32 32 58-62" fill="none" stroke="#c8102e" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M212 222l32 32 58-62" fill="none" stroke="#0abaff" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
 </svg>
