@@ -148,7 +148,7 @@ main {
 .result:last-child { border-bottom: 0; }
 .result:hover, .result:focus-visible { background: var(--paper); }
 .result small { display: block; color: var(--slate); }
-.search-dot { width: 18px; height: 18px; border-radius: 50%; background: var(--red); border: 3px solid #fff; box-shadow: 0 0 0 2px var(--red), 0 2px 6px rgb(0 0 0 / 0.35); }
+.search-dot { width: 18px; height: 18px; border-radius: 50%; background: var(--brand); border: 3px solid #fff; box-shadow: 0 0 0 2px #14213d, 0 2px 6px rgb(0 0 0 / 0.35); }
 .new-here small { color: var(--slate); }
 .map-hint {
   position: absolute; z-index: 450; left: 12px; bottom: 16px; max-width: calc(100% - 76px);
@@ -401,7 +401,7 @@ main {
   flex: 1; min-width: 0; height: 40px; padding: 0 12px; border-radius: 6px; border: 1px solid transparent;
   background: var(--chrome-ink); color: var(--chrome); font: inherit; font-weight: 600;
 }
-.name-save { height: 40px; padding: 0 16px; border-radius: 6px; border: 0; background: var(--red); color: #fff; font-weight: 600; cursor: pointer; }
+.name-save { height: 40px; padding: 0 16px; border-radius: 6px; border: 0; background: var(--brand); color: #14213d; font-weight: 600; cursor: pointer; }
 .field .optional { font-weight: 400; }
 .detail-title h2 { margin: 0; font-size: var(--step-3); font-weight: 800; line-height: 1.05; letter-spacing: -0.02em; overflow-wrap: anywhere; }
 .detail-country { margin: 6px 0 0; font-size: var(--step-1); }
