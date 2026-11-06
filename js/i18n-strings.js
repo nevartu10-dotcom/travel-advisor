@@ -29,6 +29,7 @@ const EN = {
   'hint.empty': 'Search above, or tap the map to plan a trip.',
   'hint.pins': 'Tap a pin to open its card.',
   'map.planHere': 'Plan a trip here?',
+  'map.home': 'Home',
   'map.newCard': 'New trip card',
 
   'form.title': 'New trip',

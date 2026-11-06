@@ -8,6 +8,8 @@ let map;
 let pinLayer;
 let pendingPopup;
 let fittedOnce = false;
+let homeMarker = null;
+let homeLatLng = null;
 
 export function initMap({ onOpenCard, onAddAt }) {
   map = L.map('map', { zoomControl: false, worldCopyJump: true, tapTolerance: 15 }).setView([50, 15], 3);
@@ -58,10 +60,44 @@ export function renderPins(cards) {
   }
 }
 
+const HOUSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 12 4l8.5 7"/><path d="M6 9.5V20h4.5v-5.5h3V20H18V9.5"/></svg>';
+
+/** House marker at the home address from the profile (removed when there is none). */
+export function renderHome(home) {
+  if (!map) return;
+  homeMarker?.remove();
+  homeMarker = null;
+  homeLatLng = null;
+  if (!home || !Number.isFinite(home.lat) || !Number.isFinite(home.lon) || (!home.lat && !home.lon)) return;
+  homeLatLng = [home.lat, home.lon];
+  const place = [home.city, countryName(home.countryCode, home.countryName)].filter(Boolean).join(', ');
+  homeMarker = L.marker(homeLatLng, {
+    icon: L.divIcon({
+      className: '',
+      html: `<div class="pin-label home-label">${esc(t('map.home'))}</div><div class="home-pin">${HOUSE}</div>`,
+      iconSize: [36, 36],
+      iconAnchor: [18, 18],
+      popupAnchor: [0, -20],
+    }),
+    title: `${t('map.home')}: ${place}`,
+    alt: `${t('map.home')}: ${place}`,
+    keyboard: true,
+    zIndexOffset: -100, // trips stay on top when they overlap
+  })
+    .bindPopup(`<div class="new-here"><p>${esc(t('map.home'))}</p><small>${esc(place)}</small></div>`)
+    .addTo(map);
+}
+
+/** Frame all trips, plus home when it is set. */
 export function fitAll(cards) {
-  if (!cards.length) return;
-  const b = L.latLngBounds(cards.map((c) => [c.lat, c.lon]));
-  map.fitBounds(b.pad(0.3), { maxZoom: 8 });
+  const points = cards.map((c) => [c.lat, c.lon]);
+  if (homeLatLng) points.push(homeLatLng);
+  if (!points.length) return;
+  if (points.length === 1) {
+    map.setView(points[0], 6);
+    return;
+  }
+  map.fitBounds(L.latLngBounds(points).pad(0.3), { maxZoom: 8 });
 }
 
 let searchMarker;

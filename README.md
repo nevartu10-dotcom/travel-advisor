@@ -31,7 +31,7 @@ Each card shows:
 Tap the round profile button at the top right.
 
 - **Name, home address, age, gender and passport expiry date.** All optional, stored only on the phone and included in backup files.
-- **Home address** is looked up once (OpenStreetMap search) to find your country. From it the app sets your **currency** automatically, compares **plugs** and **voltage** with home, and links your home country's official travel advice where known (Finland, Sweden, Norway, Denmark, Germany, France, UK, US, Canada).
+- **Home address** is looked up once (OpenStreetMap search) to find your country, and shown on the map with a house marker. From it the app sets your **currency** automatically, compares **plugs** and **voltage** with home, and links your home country's official travel advice where known (Finland, Sweden, Norway, Denmark, Germany, France, UK, US, Canada).
 - **Passport:** trip cards warn when the passport expires before the trip ends or within 6 months after it (many countries require 6 months; Schengen 3 months). Always check the destination's entry rules.
 - **Welcome message** on start, in the main language of your home country (e.g. "Tervetuloa, Tuomas!"), with gendered forms where the language needs them (e.g. Portuguese "Bem-vinda/Bem-vindo"; neutral when gender isn't given).
 - **App language:** English, Finnish, French, German, Norwegian, Portuguese, Spanish or Swedish. Buttons, labels, dates and numbers follow the language. Content from Wikipedia, Wikivoyage and other sources stays in English.

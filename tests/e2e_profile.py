@@ -93,6 +93,16 @@ with sync_playwright() as p:
     prof = pg.evaluate("() => JSON.parse(localStorage.getItem('travel-advisor.profile.v1'))")
     check(prof.get('currency') == 'EUR' and prof.get('home', {}).get('countryCode') == 'FI' and prof.get('age') == 45, 'profile saved with home country, currency and age')
 
+    # Home marker on the map
+    check(pg.locator('.home-pin').count() == 1 and pg.inner_text('.home-label') == 'Home', 'home shown on the map with a house icon')
+    pg.click('#tab-map')
+    pg.evaluate("() => window.dispatchEvent(new Event('resize'))")
+    shot(pg, 'p02b-map-home.png')
+    pg.locator('.home-pin').click()
+    pg.wait_for_selector('.leaflet-popup .new-here')
+    check('Helsinki, Finland' in pg.inner_text('.leaflet-popup'), 'tapping home shows the home address')
+    check(not pg.evaluate("document.querySelector('#form-sheet').open"), 'tapping home doesn’t start a new trip')
+
     # Trip card uses the profile: passport warning, home plugs
     open_card(pg)
     txt = pg.inner_text('#detail')
@@ -117,6 +127,7 @@ with sync_playwright() as p:
     check(pg.evaluate('document.documentElement.lang') == 'fi', 'page language set to Finnish')
     check(pg.inner_text('#appbar-title') in ('Matkakartta', 'Matkat') and pg.inner_text('#tab-list') == 'Lista', f'interface in Finnish {pg.inner_text("#appbar-title")!r}')
     check('Seuraava matkasi' in pg.inner_text('.welcome-line'), 'welcome line in Finnish')
+    check(pg.inner_text('.home-label') == 'Koti', 'home label in Finnish')
     shot(pg, 'p04-map-fi.png')
     pg.click('.welcome-close')
     pg.click('#tab-list')
@@ -181,12 +192,14 @@ with sync_playwright() as p:
     pg.click('#backup-sheet [data-close]')
     pg.evaluate('() => localStorage.clear()'); pg.reload()
     check(pg.inner_text('.welcome-hello') == 'Welcome!', 'after clearing data the profile is gone')
+    check(pg.locator('.home-pin').count() == 0, 'no home marker without a profile')
     pg.click('.welcome-close')
     pg.click('#backup-btn'); pg.wait_for_selector('#backup-sheet[open]')
     pg.set_input_files('#backup-file', path)
     pg.wait_for_function("() => document.querySelector('#toast').textContent.includes('profile')")
     check('1 added' in pg.inner_text('#toast'), 'restore reports trip and profile')
     check(pg.inner_text('#profile-avatar') == 'TV', 'restored profile shows initials')
+    check(pg.locator('.home-pin').count() == 1, 'restored profile brings the home marker back')
 
     # Dark mode look of the profile page and welcome
     if SHOTS:

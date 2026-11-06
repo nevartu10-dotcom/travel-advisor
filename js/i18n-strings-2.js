@@ -26,6 +26,7 @@ export const FI = {
   'hint.empty': 'Hae yllä tai suunnittele matka napauttamalla karttaa.',
   'hint.pins': 'Avaa matkakortti napauttamalla nastaa.',
   'map.planHere': 'Suunnitellaanko matka tänne?',
+  'map.home': 'Koti',
   'map.newCard': 'Uusi matkakortti',
 
   'form.title': 'Uusi matka',
@@ -290,6 +291,7 @@ export const FR = {
   'hint.empty': 'Recherchez ci-dessus ou touchez la carte pour préparer un voyage.',
   'hint.pins': 'Touchez une épingle pour ouvrir sa fiche.',
   'map.planHere': 'Préparer un voyage ici ?',
+  'map.home': 'Domicile',
   'map.newCard': 'Nouvelle fiche de voyage',
 
   'form.title': 'Nouveau voyage',
@@ -554,6 +556,7 @@ export const DE = {
   'hint.empty': 'Suche oben oder tippe auf die Karte, um eine Reise zu planen.',
   'hint.pins': 'Tippe auf eine Nadel, um die Reisekarte zu öffnen.',
   'map.planHere': 'Hier eine Reise planen?',
+  'map.home': 'Zuhause',
   'map.newCard': 'Neue Reisekarte',
 
   'form.title': 'Neue Reise',

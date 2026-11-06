@@ -26,6 +26,7 @@ export const NB = {
   'hint.empty': 'Søk ovenfor, eller trykk på kartet for å planlegge en reise.',
   'hint.pins': 'Trykk på en nål for å åpne reisekortet.',
   'map.planHere': 'Planlegge en reise hit?',
+  'map.home': 'Hjem',
   'map.newCard': 'Nytt reisekort',
 
   'form.title': 'Ny reise',
@@ -290,6 +291,7 @@ export const PT = {
   'hint.empty': 'Pesquise acima ou toque no mapa para planear uma viagem.',
   'hint.pins': 'Toque num marcador para abrir o cartão.',
   'map.planHere': 'Planear uma viagem para aqui?',
+  'map.home': 'Casa',
   'map.newCard': 'Novo cartão de viagem',
 
   'form.title': 'Nova viagem',
@@ -554,6 +556,7 @@ export const ES = {
   'hint.empty': 'Busca arriba o toca el mapa para planear un viaje.',
   'hint.pins': 'Toca una chincheta para abrir su tarjeta.',
   'map.planHere': '¿Planear un viaje aquí?',
+  'map.home': 'Casa',
   'map.newCard': 'Nueva tarjeta de viaje',
 
   'form.title': 'Nuevo viaje',
@@ -818,6 +821,7 @@ export const SV = {
   'hint.empty': 'Sök ovan eller tryck på kartan för att planera en resa.',
   'hint.pins': 'Tryck på en nål för att öppna resekortet.',
   'map.planHere': 'Planera en resa hit?',
+  'map.home': 'Hem',
   'map.newCard': 'Nytt resekort',
 
   'form.title': 'Ny resa',

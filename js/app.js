@@ -1,7 +1,7 @@
 // App entry: tabs, list rendering, wiring.
 import { applyStatic, t, tp, countryName } from './i18n.js';
 import { getCards, onChange, setMeta } from './store.js';
-import { initMap, renderPins, refreshSize, focusCard, fitAll, showPlace } from './map.js';
+import { initMap, renderPins, renderHome, refreshSize, focusCard, fitAll, showPlace } from './map.js';
 import { searchPlace } from './api/geocode.js';
 import { downloadBackup, restoreFrom, requestPersistence, needsBackup, lastBackupText } from './backup.js';
 import { initForm, openForm } from './form.js';
@@ -73,6 +73,7 @@ function render() {
   const cards = getCards();
   renderList(cards);
   renderPins(cards);
+  renderHome(getProfile().home);
   $('map-hint').textContent = t(cards.length ? 'hint.pins' : 'hint.empty');
 }
 
@@ -251,7 +252,17 @@ function start() {
   initDetail({ deleted: (card) => toast(t('toast.deleted', { title: tripLabel(card) })) });
   initBackup();
   initProfile({ saved: () => render() });
-  onProfileChange(renderAvatar);
+  let lastHome = JSON.stringify([getProfile().home?.lat, getProfile().home?.lon]);
+  onProfileChange((p) => {
+    renderAvatar();
+    renderHome(p.home);
+    // A new home address: reframe the map so home and trips are both in view.
+    const now = JSON.stringify([p.home?.lat, p.home?.lon]);
+    if (now !== lastHome) {
+      lastHome = now;
+      setTimeout(() => fitAll(getCards()), 50);
+    }
+  });
   $('profile-btn').addEventListener('click', () => {
     hideWelcome();
     openProfile();
