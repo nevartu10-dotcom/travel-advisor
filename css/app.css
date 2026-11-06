@@ -1,6 +1,6 @@
-/* Prepvoy — "airmail" identity.
-   Navy ink on cool paper. The red/blue airmail stripe is the one loud element:
-   it marks trip tickets, map pins and the card header. Everything else stays quiet. */
+/* Prepvoy identity.
+   Navy ink on cool paper. The bright blue brand ribbon (--brand, as in the logo) is the one loud
+   element: it marks the selected tab, trip tickets, map pins and the card header. Everything else stays quiet. */
 
 :root {
   --paper: #eef2f6;
@@ -32,7 +32,9 @@
   --safe-b: env(safe-area-inset-bottom, 0px);
   --safe-t: env(safe-area-inset-top, 0px);
 
-  --stripe: repeating-linear-gradient(135deg, var(--red) 0 10px, transparent 10px 16px, var(--blue) 16px 26px, transparent 26px 32px);
+  --brand: #0abaff;
+  /* An image, not a colour, so it also works in background-image layers (map pins). */
+  --stripe: linear-gradient(var(--brand), var(--brand));
   color-scheme: light;
 }
 
