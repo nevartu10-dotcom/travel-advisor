@@ -260,6 +260,56 @@ main {
   .sheet { width: min(640px, 100%); height: min(92vh, 900px); margin: auto; border-radius: 10px; box-shadow: 0 20px 60px rgb(0 0 0 / 0.3); }
 }
 
+/* Profile button */
+.profile-btn { padding: 0; }
+.avatar {
+  width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center;
+  border: 2px solid color-mix(in srgb, var(--chrome-ink) 70%, transparent); color: var(--chrome-ink);
+  font-size: 0.8125rem; font-weight: 800; letter-spacing: 0.02em; line-height: 1;
+}
+.avatar svg { width: 20px; height: 20px; }
+.avatar.has-initials { background: var(--red); border-color: var(--red); color: #fff; }
+
+/* Welcome */
+.welcome {
+  position: absolute; z-index: 480; top: 12px; left: 12px; right: 12px; max-width: 560px; margin: 0 auto;
+  display: flex; gap: 8px; align-items: flex-start; padding: 16px 8px 16px 18px; border-radius: 8px;
+  background: var(--chrome); color: var(--chrome-ink); box-shadow: 0 10px 28px rgb(13 20 36 / 0.35);
+  overflow: hidden; animation: welcome-in 0.35s ease-out;
+}
+.welcome::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--stripe); background-size: 6px 32px; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .welcome { border: 1px solid color-mix(in srgb, var(--chrome-ink) 22%, transparent); }
+}
+.welcome-text { flex: 1; min-width: 0; }
+.welcome-hello { margin: 0; font-size: var(--step-2); font-weight: 800; line-height: 1.15; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+.welcome-line { margin: 6px 0 0; color: color-mix(in srgb, var(--chrome-ink) 82%, transparent); }
+.welcome-setup { margin-top: 12px; min-height: 40px; border-color: color-mix(in srgb, var(--chrome-ink) 40%, transparent); color: var(--chrome-ink); }
+.welcome-close { color: var(--chrome-ink); flex: none; margin-top: -6px; }
+@keyframes welcome-in { from { transform: translateY(-8px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Profile form */
+.profile-body { max-width: 560px; }
+.profile-body > .muted { margin: 0; }
+.field select {
+  min-height: 48px; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--rule);
+  background: var(--surface); color: var(--ink); font: inherit; width: 100%;
+}
+.field select:focus { border-color: var(--blue); outline: none; box-shadow: 0 0 0 3px rgb(29 79 156 / 0.2); }
+.field > label, .field-label { font-size: var(--step--1); font-weight: 600; color: var(--slate); }
+.field-inline { display: flex; gap: 8px; }
+.field-inline input { flex: 1; min-width: 0; }
+.field-inline .btn { flex: none; padding: 0 14px; }
+.field-note { display: block; margin: 0; font-size: var(--step--1); }
+.field-note:empty { display: none; }
+.field-note.ok { color: var(--ok); }
+.field-note.warn { color: var(--warn); font-weight: 600; }
+.currency { margin: 0; display: grid; gap: 2px; }
+
+/* Passport notice on a trip card */
+.topic.passport .verdict { margin: 0; }
+.topic.passport-expired .verdict { color: var(--danger); }
+
 /* Backup */
 .sheet-small .sheet-body { padding-top: 0; }
 .backup-body { display: grid; gap: 12px; align-content: start; max-width: 560px; }

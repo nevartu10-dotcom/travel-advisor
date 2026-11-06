@@ -2,6 +2,7 @@
 import * as L from '../vendor/leaflet/src/Leaflet.js';
 import { flagEmoji } from './api/country.js';
 import { isPast, dateRange, tripTitle, esc } from './ui.js';
+import { t, countryName } from './i18n.js';
 
 let map;
 let pinLayer;
@@ -21,7 +22,7 @@ export function initMap({ onOpenCard, onAddAt }) {
     const { lat, lng } = e.latlng.wrap();
     const box = document.createElement('div');
     box.className = 'new-here';
-    box.innerHTML = `<p>Plan a trip here?</p><button class="btn btn-primary" type="button">New trip card</button>`;
+    box.innerHTML = `<p>${esc(t('map.planHere'))}</p><button class="btn btn-primary" type="button">${esc(t('map.newCard'))}</button>`;
     box.querySelector('button').addEventListener('click', () => {
       map.closePopup();
       onAddAt(lat, lng);
@@ -46,8 +47,8 @@ export function renderPins(cards) {
     L.marker([c.lat, c.lon], {
       icon,
       cardId: c.id,
-      title: c.name ? `${c.name}: ${c.city}, ${c.countryName}` : `${c.city}, ${c.countryName}`,
-      alt: `${tripTitle(c)}, ${c.city}, ${c.countryName}, ${dateRange(c.arrival, c.departure)}`,
+      title: c.name ? `${c.name}: ${c.city}, ${countryName(c.countryCode, c.countryName)}` : `${c.city}, ${countryName(c.countryCode, c.countryName)}`,
+      alt: `${tripTitle(c)}, ${c.city}, ${countryName(c.countryCode, c.countryName)}, ${dateRange(c.arrival, c.departure)}`,
       keyboard: true,
     }).addTo(pinLayer);
   }
@@ -70,7 +71,7 @@ export function showPlace(place, onAdd) {
   searchMarker?.remove();
   const box = document.createElement('div');
   box.className = 'new-here';
-  box.innerHTML = `<p></p><small></small><button class="btn btn-primary" type="button">New trip card</button>`;
+  box.innerHTML = `<p></p><small></small><button class="btn btn-primary" type="button">${esc(t('map.newCard'))}</button>`;
   box.querySelector('p').textContent = place.city || place.name;
   box.querySelector('small').textContent = place.label;
   box.querySelector('button').addEventListener('click', () => {

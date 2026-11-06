@@ -57,8 +57,26 @@ const NAMES = {
   vie: 'Vietnamese', wol: 'Wolof', xho: 'Xhosa', yor: 'Yoruba', zho: 'Chinese', zul: 'Zulu',
 };
 
+// ISO 639-3 → ISO 639-1 (or BCP 47) for showing language names in the app language.
+const ISO1 = {
+  afr: 'af', amh: 'am', ara: 'ar', aym: 'ay', aze: 'az', bam: 'bm', bel: 'be', ben: 'bn', bis: 'bi', bos: 'bs',
+  bul: 'bg', cat: 'ca', ces: 'cs', cnr: 'cnr', cym: 'cy', dan: 'da', deu: 'de', div: 'dv', dzo: 'dz', ell: 'el',
+  eng: 'en', est: 'et', eus: 'eu', fao: 'fo', fas: 'fa', fij: 'fj', fil: 'fil', fin: 'fi', fra: 'fr', gle: 'ga',
+  glg: 'gl', grn: 'gn', hat: 'ht', hau: 'ha', heb: 'he', hin: 'hi', hrv: 'hr', hun: 'hu', hye: 'hy', ibo: 'ig',
+  ind: 'id', isl: 'is', ita: 'it', jpn: 'ja', kal: 'kl', kat: 'ka', kaz: 'kk', khm: 'km', kin: 'rw', kir: 'ky',
+  kor: 'ko', kur: 'ku', lao: 'lo', lat: 'la', lav: 'lv', lin: 'ln', lit: 'lt', ltz: 'lb', mah: 'mh', mar: 'mr',
+  mkd: 'mk', mlg: 'mg', mlt: 'mt', mon: 'mn', mri: 'mi', msa: 'ms', mya: 'my', nau: 'na', nep: 'ne', nld: 'nl',
+  nob: 'nb', nya: 'ny', orm: 'om', pap: 'pap', pol: 'pl', por: 'pt', pus: 'ps', que: 'qu', roh: 'rm', ron: 'ro',
+  run: 'rn', rus: 'ru', sag: 'sg', sin: 'si', slk: 'sk', slv: 'sl', smo: 'sm', sna: 'sn', som: 'so', sot: 'st',
+  spa: 'es', sqi: 'sq', srp: 'sr', ssw: 'ss', swa: 'sw', swe: 'sv', tam: 'ta', tel: 'te', tgk: 'tg', tha: 'th',
+  tir: 'ti', ton: 'to', tsn: 'tn', tuk: 'tk', tur: 'tr', ukr: 'uk', urd: 'ur', uzb: 'uz', vie: 'vi', wol: 'wo',
+  xho: 'xh', yor: 'yo', zho: 'zh', zul: 'zu',
+};
+
+export const iso1 = (code3) => ISO1[code3] || null;
+
 export function countryLanguages(cc) {
   const row = C[String(cc || '').toUpperCase()];
   if (!row) return [];
-  return row.split(' ').map((code) => ({ code, name: NAMES[code] || code }));
+  return row.split(' ').map((code) => ({ code, name: NAMES[code] || code, code1: ISO1[code] || null }));
 }

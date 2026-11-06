@@ -65,7 +65,6 @@ const wvUrl = (title) => `https://en.wikivoyage.org/wiki/${encodeURIComponent(ti
 
 /* ---------- Official advisories (optional) ---------- */
 
-const LEVEL_TEXT = { 1: 'Exercise normal precautions', 2: 'Exercise increased caution', 3: 'Reconsider travel', 4: 'Do not travel' };
 const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z ]/g, ' ').replace(/\s+/g, ' ').trim();
 
 async function usLevel(names) {
@@ -119,8 +118,8 @@ export function getSafety({ countryCode, countryName, countryNames, city, region
     const country = countryGuide && countryGuide.title !== cityGuide?.title ? countryGuide : null;
     if (!cityGuide && !country && !official) throw new Error('No safety information found for this destination');
 
-    const levelText = official ? `Level ${official.level} of 4: ${LEVEL_TEXT[official.level]}` : '';
-    let budget = 100 - countWords(levelText);
+    // The level line ("Level 2 of 4: …") is about 8 words in any language.
+    let budget = official ? 92 : 100;
     const parts = [];
     if (cityGuide) {
       const t = firstSentences(cityGuide.text, country ? Math.round(budget * 0.6) : budget);
@@ -138,7 +137,6 @@ export function getSafety({ countryCode, countryName, countryNames, city, region
 
     return {
       level: official?.level || null,
-      levelText,
       parts,
       cityCovered: !!cityGuide,
       sources,

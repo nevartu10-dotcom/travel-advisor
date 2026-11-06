@@ -3,6 +3,7 @@ import { searchPlace, reversePlace } from './api/geocode.js';
 import { flagEmoji } from './api/country.js';
 import { addCard } from './store.js';
 import { esc, openSheet, closeSheet } from './ui.js';
+import { t, countryName } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
 let selected = null;
@@ -50,25 +51,25 @@ export async function openForm(at) {
 
   if (at?.place) {
     const place = at.place;
-    $('f-country').value = place.countryName;
+    $('f-country').value = countryName(place.countryCode, place.countryName);
     $('f-place').value = place.city || place.name;
     matches = [place];
     selected = place;
     renderMatches();
     $('f-arrival').focus();
   } else if (at) {
-    $('f-matches').innerHTML = '<p class="match-note">Looking up the place you tapped…</p>';
+    $('f-matches').innerHTML = `<p class="match-note">${esc(t('form.lookingUp'))}</p>`;
     try {
       const place = await reversePlace(at.lat, at.lon);
       if (!place) throw new Error('Nothing found there');
-      $('f-country').value = place.countryName;
+      $('f-country').value = countryName(place.countryCode, place.countryName);
       $('f-place').value = place.city;
       matches = [place];
       selected = place;
       renderMatches();
       $('f-arrival').focus();
     } catch (err) {
-      $('f-matches').innerHTML = `<p class="match-note">Couldn’t name that spot (${esc(err.message)}). Type the country and city instead.</p>`;
+      $('f-matches').innerHTML = `<p class="match-note">${esc(t('form.cantName', { error: err.message }))}</p>`;
       $('f-country').focus();
     }
   } else {
@@ -87,12 +88,12 @@ function renderMatches() {
     return;
   }
   box.innerHTML =
-    (matches.length > 1 ? '<p class="match-note">Pick the right place:</p>' : '') +
+    (matches.length > 1 ? `<p class="match-note">${esc(t('form.pick'))}</p>` : '') +
     matches
       .map(
         (m, i) => `<button type="button" class="match" data-i="${i}" aria-pressed="${m === selected}">
           <span aria-hidden="true">${flagEmoji(m.countryCode)}</span>
-          <span>${esc(m.city || m.name)}, ${esc(m.countryName)}<small>${esc(m.label)}</small></span>
+          <span>${esc(m.city || m.name)}, ${esc(countryName(m.countryCode, m.countryName))}<small>${esc(m.label)}</small></span>
         </button>`
       )
       .join('');
@@ -102,22 +103,22 @@ async function find() {
   const country = $('f-country').value.trim();
   const place = $('f-place').value.trim();
   if (!country || !place) {
-    setError('Enter a country and a city or address first.');
+    setError(t('form.needBoth'));
     return null;
   }
   setError('');
-  $('f-matches').innerHTML = '<p class="match-note">Searching…</p>';
+  $('f-matches').innerHTML = `<p class="match-note">${esc(t('search.searching'))}</p>`;
   try {
     matches = await searchPlace(country, place);
   } catch (err) {
     matches = [];
     $('f-matches').innerHTML = '';
-    setError(`Search failed: ${err.message}. Check your connection and try again.`);
+    setError(t('search.failed', { error: err.message }));
     return null;
   }
   if (!matches.length) {
     $('f-matches').innerHTML = '';
-    setError(`No place called “${place}” found in ${country}. Check the spelling or try a nearby city.`);
+    setError(t('form.notFound', { place, country }));
     return null;
   }
   selected = matches[0];
@@ -130,9 +131,9 @@ async function submit(e) {
   const arrival = $('f-arrival').value;
   const departure = $('f-departure').value;
   const btn = $('f-submit');
-  if (!$('f-country').value.trim() || !$('f-place').value.trim()) return setError('Enter a country and a city or address.');
-  if (!arrival || !departure) return setError('Add both arrival and departure dates.');
-  if (departure < arrival) return setError('Departure can’t be before arrival.');
+  if (!$('f-country').value.trim() || !$('f-place').value.trim()) return setError(t('form.needPlace'));
+  if (!arrival || !departure) return setError(t('form.needDates'));
+  if (departure < arrival) return setError(t('form.badDates'));
 
   btn.disabled = true;
   try {

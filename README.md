@@ -26,9 +26,19 @@ Each card shows:
 | Numbers 1–10 and basic words (hello, good morning, good day, good night, please, thank you, goodbye, yes, no) | Built-in phrasebook for ~45 languages with romanization for non-Latin scripts; other languages are machine-translated with [MyMemory](https://mymemory.translated.net) and labelled as such |
 | My notes (max 500 words) | Your own text, saved automatically on your device with the card |
 
+## Profile and languages
+
+Tap the round profile button at the top right.
+
+- **Name, home address, age, gender and passport expiry date.** All optional, stored only on the phone and included in backup files.
+- **Home address** is looked up once (OpenStreetMap search) to find your country. From it the app sets your **currency** automatically, compares **plugs** and **voltage** with home, and links your home country's official travel advice where known (Finland, Sweden, Norway, Denmark, Germany, France, UK, US, Canada).
+- **Passport:** trip cards warn when the passport expires before the trip ends or within 6 months after it (many countries require 6 months; Schengen 3 months). Always check the destination's entry rules.
+- **Welcome message** on start, in the main language of your home country (e.g. "Tervetuloa, Tuomas!"), with gendered forms where the language needs them (e.g. Portuguese "Bem-vinda/Bem-vindo"; neutral when gender isn't given).
+- **App language:** English, Finnish, French, German, Norwegian, Portuguese, Spanish or Swedish. Buttons, labels, dates and numbers follow the language. Content from Wikipedia, Wikivoyage and other sources stays in English.
+
 ## Data and privacy
 
-- **Only your trip cards (including your notes) are stored**, in your browser's local storage on your device. There is no account and no server of our own.
+- **Only your trip cards (including your notes) and your profile are stored**, in your browser's local storage on your device. There is no account and no server of our own.
 - Everything inside a card is fetched live from the public services above each time you open it.
 - For offline use while travelling, the service worker keeps the app itself, map tiles you've viewed, and the most recent answer from each service. Fresh data is always tried first.
 - Languages, plug types and phrases are stable reference data, so they ship with the app instead of being fetched. (restcountries.com, used at first, now requires a private API key, which can't be kept secret in a web app.)
@@ -68,6 +78,7 @@ End-to-end test with all external services mocked (needs Python Playwright):
 ```sh
 python3 -m http.server 8765 &
 python3 tests/e2e.py              # add --shots DIR to save screenshots
+python3 tests/e2e_profile.py      # profile, languages, welcome, passport
 ```
 
 ## Project layout
@@ -80,6 +91,10 @@ js/map.js               Leaflet map, pins, tap-to-add
 js/form.js              New trip form
 js/detail.js            Trip card with the nine topics
 js/store.js             Local storage for trip cards
+js/profile.js           Profile storage, passport and welcome logic
+js/profile-ui.js        Profile page
+js/i18n.js              App language, dates and numbers
+js/i18n-strings*.js     Interface text in 8 languages
 js/api/*.js             One module per data source
 js/data/plugs.js        Plug types by country
 js/data/phrasebook.js   Numbers and phrases by language

@@ -34,6 +34,14 @@ def handler(route):
     if 'nominatim' in url and '/search' in url and 'q=restaurant' in url:
         return j([{"name": n, "lat": str(38.70 + i * 0.001), "lon": "-9.10", "type": "restaurant", "category": "amenity", "importance": 0.1, "extratags": {"cuisine": "portuguese"}}
                   for i, n in enumerate(["Fallback Tasca", "Fallback Marisqueira", "Fallback Café", "Fallback Grill", "Fallback Bistro", "Fallback Sushi"])])
+    if 'nominatim' in url and '/search' in url and 'Helsinki' in url:
+        return j([{"lat": "60.1699", "lon": "24.9384", "name": "Mannerheimintie", "display_name": "Mannerheimintie 1, Helsinki, Finland",
+                   "address": {"city": "Helsinki", "state": "Uusimaa", "country": "Finland", "country_code": "fi"}}])
+    if 'nominatim' in url and '/search' in url and 'Porto' in url:
+        return j([{"lat": "41.1579", "lon": "-8.6291", "name": "Porto", "display_name": "Porto, Portugal",
+                   "address": {"city": "Porto", "country": "Portugal", "country_code": "pt"}}])
+    if 'nominatim' in url and '/search' in url and 'Nowhere' in url:
+        return j([])
     if 'nominatim' in url and '/search' in url:
         return j([LISBON, {**LISBON, "lat": "38.72", "display_name": "Lisbon district, Portugal", "address": {**LISBON["address"], "city": "Lisbon District"}}])
     if 'nominatim' in url and '/reverse' in url:
@@ -148,7 +156,7 @@ def main():
         txt = pg.inner_text('#detail')
         check('Portuguese' in txt, 'language shown')
         check(pg.locator('.wday').count() == 6, 'weather shows 6 forecast days')
-        check('Type C' in txt and 'Type F' in txt and 'fit here' in txt, 'plugs C/F + fits Finnish plugs')
+        check('Type C' in txt and 'Type F' in txt and 'Add your home address' in txt, 'plugs C/F; asks for home address when no profile')
         safety_txt = pg.inner_text('[data-topic="safety"] .topic-body')
         check('Lisbon:' in safety_txt and 'tram 28' in safety_txt and 'Portugal:' in safety_txt, 'safety uses Wikivoyage city + country advice')
         check('Scams' not in safety_txt, 'sub-headings stripped from safety text')
@@ -341,4 +349,5 @@ def main():
     print(f'\n{len(fails)} failed' if fails else '\nALL PASSED')
     sys.exit(1 if fails else 0)
 
-main()
+if __name__ == '__main__':
+    main()

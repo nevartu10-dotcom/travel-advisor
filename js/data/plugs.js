@@ -2,6 +2,7 @@
 // Source: IEC World Plugs / WorldStandards reference tables. This is stable
 // reference data, so it ships with the app instead of being fetched.
 
+// English descriptions; the app shows translated ones (i18n keys plug.A … plug.O).
 export const PLUG_TYPES = {
   A: 'Two flat parallel pins (North American, ungrounded)',
   B: 'Two flat pins plus a round earth pin (North American)',
@@ -69,19 +70,32 @@ const T = {
   ZA: ['CMN', '230'], ZM: ['CDG', '230'], ZW: ['DG', '240'],
 };
 
-// Plugs from home (Finland: C and F) fit sockets of these types.
-const FITS_HOME_PLUGS = new Set(['C', 'E', 'F']);
-export const HOME = { name: 'Finland', types: ['C', 'F'], voltage: 230 };
+// Which socket types a plug of each type fits into (simplified, common cases).
+const FITS = {
+  A: 'AB', B: 'B', C: 'CEFJKLN', D: 'D', E: 'EF', F: 'EF', G: 'G', H: 'H', I: 'I',
+  J: 'J', K: 'K', L: 'L', M: 'M', N: 'N', O: 'O',
+};
 
-export function plugInfo(countryCode) {
+/** Plug types and voltage at the destination, compared with the home country's plugs. */
+export function plugInfo(countryCode, homeCode) {
   const row = T[String(countryCode || '').toUpperCase()];
   if (!row) return null;
   const types = row[0].split('');
-  const lowVoltage = parseInt(row[1], 10) < 200;
-  return {
-    types,
-    voltage: row[1],
-    homePlugsFit: types.some((t) => FITS_HOME_PLUGS.has(t)),
-    lowVoltage,
-  };
+  const home = homeCode ? T[String(homeCode).toUpperCase()] : null;
+  const info = { types, voltage: row[1], home: null };
+  if (home) {
+    const homeTypes = home[0].split('');
+    const fitting = homeTypes.filter((h) => types.some((t) => (FITS[h] || h).includes(t)));
+    const v = parseInt(row[1], 10);
+    const hv = parseInt(home[1], 10);
+    info.home = {
+      types: homeTypes,
+      voltage: home[1],
+      fitting,
+      plugsFit: fitting.length === homeTypes.length,
+      someFit: fitting.length > 0,
+      voltageDiffers: Math.abs(v - hv) > 30,
+    };
+  }
+  return info;
 }

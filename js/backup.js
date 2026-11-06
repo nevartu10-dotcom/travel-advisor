@@ -3,11 +3,13 @@
 // Note: no web app can survive the user choosing "Clear browsing data" — that erases
 // everything sites have stored. A backup file (e.g. in Downloads) is what survives it.
 import { getCards, getMeta, setMeta, importCards } from './store.js';
+import { getProfile, saveProfile, cleanProfile } from './profile.js';
+import { t, stamp } from './i18n.js';
 
 const FORMAT = 'travel-advisor-backup';
 
 function backupBlob() {
-  const data = { format: FORMAT, version: 1, exportedAt: new Date().toISOString(), cards: getCards() };
+  const data = { format: FORMAT, version: 2, exportedAt: new Date().toISOString(), cards: getCards(), profile: getProfile() };
   return new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
 }
 
@@ -28,19 +30,23 @@ export function downloadBackup() {
   setMeta({ lastBackup: Date.now() });
 }
 
-/** Read a backup file and merge its trips. Returns { added, updated, skipped }. */
+/** Read a backup file and merge its trips (and profile). Returns { added, updated, skipped, profile }. */
 export async function restoreFrom(file) {
-  if (file.size > 5 * 1024 * 1024) throw new Error('That file is too large to be a Travel Advisor backup');
+  if (file.size > 5 * 1024 * 1024) throw new Error(t('backup.tooLarge'));
   let data;
   try {
     data = JSON.parse(await file.text());
   } catch {
-    throw new Error('That file isn’t a Travel Advisor backup (it couldn’t be read)');
+    throw new Error(t('backup.unreadable'));
   }
   const list = Array.isArray(data) ? data : data?.format === FORMAT ? data.cards : null;
-  if (!Array.isArray(list)) throw new Error('That file isn’t a Travel Advisor backup');
-  const result = importCards(list);
-  if (!result.added && !result.updated) throw new Error('No trips found in that file');
+  if (!Array.isArray(list)) throw new Error(t('backup.notBackup'));
+  const result = list.length ? importCards(list) : { added: 0, updated: 0, skipped: 0 };
+  // Backups from version 2 on also carry the profile.
+  const profile = !Array.isArray(data) && data.profile ? cleanProfile(data.profile) : null;
+  result.profile = !!(profile && Object.keys(profile).length);
+  if (result.profile) saveProfile(profile);
+  if (!result.added && !result.updated && !result.profile) throw new Error(t('backup.noTrips'));
   return result;
 }
 
@@ -55,14 +61,14 @@ export async function requestPersistence() {
   }
 }
 
-/** True when there are trips changed since the last backup. */
+/** True when there are trips (or a profile) changed since the last backup. */
 export function needsBackup() {
   const { lastChange = 0, lastBackup = 0 } = getMeta();
-  return getCards().length > 0 && lastChange > lastBackup;
+  const p = getProfile();
+  return (getCards().length > 0 || !!(p.name || p.home)) && lastChange > lastBackup;
 }
 
 export function lastBackupText() {
   const { lastBackup } = getMeta();
-  if (!lastBackup) return 'Not backed up yet.';
-  return `Last backup: ${new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(lastBackup)}.`;
+  return lastBackup ? t('backup.last', { date: stamp(lastBackup) }) : t('backup.notYet');
 }

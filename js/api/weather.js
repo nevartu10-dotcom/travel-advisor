@@ -19,15 +19,16 @@ function shiftYear(s, by) {
   return `${y + by}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
+// Weather codes → icon and i18n key for the description (wx.*).
 const CODES = [
-  [[0], '☀️', 'Clear'], [[1], '🌤️', 'Mostly clear'], [[2], '⛅', 'Partly cloudy'], [[3], '☁️', 'Overcast'],
-  [[45, 48], '🌫️', 'Fog'], [[51, 53, 55, 56, 57], '🌦️', 'Drizzle'], [[61, 63, 65, 66, 67], '🌧️', 'Rain'],
-  [[71, 73, 75, 77], '🌨️', 'Snow'], [[80, 81, 82], '🌦️', 'Showers'], [[85, 86], '🌨️', 'Snow showers'],
-  [[95, 96, 99], '⛈️', 'Thunderstorm'],
+  [[0], '☀️', 'clear'], [[1], '🌤️', 'mostlyClear'], [[2], '⛅', 'partly'], [[3], '☁️', 'overcast'],
+  [[45, 48], '🌫️', 'fog'], [[51, 53, 55, 56, 57], '🌦️', 'drizzle'], [[61, 63, 65, 66, 67], '🌧️', 'rain'],
+  [[71, 73, 75, 77], '🌨️', 'snow'], [[80, 81, 82], '🌦️', 'showers'], [[85, 86], '🌨️', 'snowShowers'],
+  [[95, 96, 99], '⛈️', 'thunder'],
 ];
 export function describeCode(code) {
   const row = CODES.find(([list]) => list.includes(code));
-  return row ? { icon: row[1], text: row[2] } : { icon: '·', text: 'No data' };
+  return row ? { icon: row[1], key: `wx.${row[2]}` } : { icon: '·', key: 'wx.none' };
 }
 
 const MAX_DAYS = 16;
@@ -36,7 +37,7 @@ export function getWeather(lat, lon, arrival, departure) {
   return remember(`weather:${lat},${lon},${arrival},${departure}`, async () => {
     const today = todayISO();
     const lastForecastDay = addDays(today, MAX_DAYS - 1);
-    let mode, start, end, note = '';
+    let mode, start, end, note = null; // note: { key, vars } for the app's language
 
     if (departure < today) {
       mode = 'recorded';
@@ -47,12 +48,12 @@ export function getWeather(lat, lon, arrival, departure) {
       start = arrival;
       end = departure < addDays(arrival, MAX_DAYS - 1) ? departure : addDays(arrival, MAX_DAYS - 1);
       const opens = addDays(arrival, -(MAX_DAYS - 1));
-      note = `The forecast opens about ${Math.ceil((parse(opens) - parse(today)) / DAY)} days from now. Until then, this is what the weather was on the same dates last year.`;
+      note = { key: 'weather.opens', vars: { n: Math.ceil((parse(opens) - parse(today)) / DAY) } };
     } else {
       mode = 'forecast';
       start = arrival < today ? today : arrival;
       end = departure > lastForecastDay ? lastForecastDay : departure;
-      if (departure > lastForecastDay) note = `Forecast runs to ${end}; later days appear as the date gets closer.`;
+      if (departure > lastForecastDay) note = { key: 'weather.runsTo', vars: { date: end } };
     }
 
     const daily = 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum';

@@ -1,25 +1,21 @@
 // Shared UI helpers.
+import { t, relative, days, number, dayMonth, dayMonthYear } from './i18n.js';
+
+export { weekday, dayMonth } from './i18n.js';
 
 export const esc = (s) =>
   String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 const DAY = 86400000;
 const parse = (s) => new Date(s + 'T00:00:00');
-const fmtDay = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' });
-const fmtDayYear = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-const fmtWeekday = new Intl.DateTimeFormat('en-GB', { weekday: 'short' });
-
-export const weekday = (s) => fmtWeekday.format(parse(s));
-export const dayMonth = (s) => fmtDay.format(parse(s));
 
 export function dateRange(a, b) {
   const sameYear = a.slice(0, 4) === b.slice(0, 4);
-  return `${sameYear ? fmtDay.format(parse(a)) : fmtDayYear.format(parse(a))} – ${fmtDayYear.format(parse(b))}`;
+  return `${sameYear ? dayMonth(a) : dayMonthYear(a)} – ${dayMonthYear(b)}`;
 }
 
 export function tripLength(a, b) {
-  const n = Math.round((parse(b) - parse(a)) / DAY) + 1;
-  return `${n} day${n === 1 ? '' : 's'}`;
+  return days(Math.round((parse(b) - parse(a)) / DAY) + 1);
 }
 
 function todayLocal() {
@@ -30,27 +26,34 @@ function todayLocal() {
 /** The trip's own name if it has one, otherwise the city. */
 export const tripTitle = (card) => (card.name && card.name.trim()) || card.city;
 
+/** Short label for toasts: “Name” or “Trip to City”. */
+export const tripLabel = (card) => (card.name ? `“${card.name}”` : t('trip.to', { city: card.city }));
+
 export function isPast(card) {
   return parse(card.departure) < todayLocal();
+}
+
+export function isNow(card) {
+  const today = todayLocal();
+  return today >= parse(card.arrival) && today <= parse(card.departure);
 }
 
 export function countdown(card) {
   const today = todayLocal();
   const a = parse(card.arrival);
   const b = parse(card.departure);
-  if (today >= a && today <= b) return 'Travelling now';
+  if (today >= a && today <= b) return t('countdown.now');
   if (today > b) {
     const n = Math.round((today - b) / DAY);
-    return n < 14 ? `${n} day${n === 1 ? '' : 's'} ago` : n < 60 ? `${Math.round(n / 7)} weeks ago` : `${Math.round(n / 30)} months ago`;
+    return n < 14 ? relative(-n, 'day') : n < 60 ? relative(-Math.round(n / 7), 'week') : relative(-Math.round(n / 30), 'month');
   }
   const n = Math.round((a - today) / DAY);
-  if (n === 1) return 'Tomorrow';
-  return n < 14 ? `In ${n} days` : n < 60 ? `In ${Math.round(n / 7)} weeks` : `In ${Math.round(n / 30)} months`;
+  return n < 14 ? relative(n, 'day') : n < 60 ? relative(Math.round(n / 7), 'week') : relative(Math.round(n / 30), 'month');
 }
 
 export function km(m) {
   if (!Number.isFinite(m)) return '';
-  return m < 1000 ? `${Math.round(m / 10) * 10} m` : `${(m / 1000).toFixed(m < 10000 ? 1 : 0)} km`;
+  return m < 1000 ? `${Math.round(m / 10) * 10} m` : `${number(m / 1000, m < 10000 ? 1 : 0)} km`;
 }
 
 let toastTimer;
@@ -69,7 +72,7 @@ export function confirmDialog(message, okLabel) {
     wrap.innerHTML = `<div class="confirm-box" role="alertdialog" aria-modal="true" aria-label="${esc(message)}">
       <p>${esc(message)}</p>
       <div class="confirm-actions">
-        <button class="btn btn-quiet" type="button" data-v="0">Keep</button>
+        <button class="btn btn-quiet" type="button" data-v="0">${esc(t('confirm.keep'))}</button>
         <button class="btn btn-danger" type="button" data-v="1">${esc(okLabel)}</button>
       </div></div>`;
     const host = document.querySelector('dialog[open]') || document.body;
