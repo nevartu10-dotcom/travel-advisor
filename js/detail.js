@@ -12,7 +12,10 @@ import { plugInfo } from './data/plugs.js';
 import { plugArt } from './data/plug-art.js';
 import { forget } from './api/http.js';
 import { tripTitle, tripLabel, esc, dateRange, tripLength, countdown, weekday, dayMonth, km, openSheet, closeSheet, confirmDialog, toast, isPast } from './ui.js';
-import { t, countryName, languageName, longDate, dayMonthDate } from './i18n.js';
+import { t, countryName, languageName, longDate, dayMonthDate, currencyName, rateNumber, hours, dayMonthLong, clockIn } from './i18n.js';
+import { currencyFor } from './data/currencies.js';
+import { capitalOf, drivesOnLeft, unitsKey } from './data/countryfacts.js';
+import { getRate, getNationalDay, getTimeZone, offsetMinutes } from './api/facts.js';
 import { getProfile, passportStatus } from './profile.js';
 
 const sheet = () => document.getElementById('detail-sheet');
@@ -28,6 +31,7 @@ export function initDetail({ deleted }) {
 }
 
 const TOPICS = [
+  ['facts', 'ℹ️'],
   ['language', '🗣️'],
   ['weather', '🌦️'],
   ['plugs', '🔌'],
@@ -74,6 +78,9 @@ export function openDetail(id) {
     <div class="detail-head">
       <div class="detail-title">
         <div class="trip-name" id="d-name"></div>
+        <div class="trip-type" role="group" aria-label="${esc(t('type.change'))}">
+          ${['holiday', 'business'].map((k) => `<button type="button" data-type="${k}" aria-pressed="${card.type === k}">${esc(t(`type.${k}`))}</button>`).join('')}
+        </div>
         <h2 id="d-city">${esc(card.city)}</h2>
         <p class="detail-country">${flagEmoji(card.countryCode)} ${esc([card.region !== card.city ? card.region : '', cname(card)].filter(Boolean).join(', '))}</p>
         <p class="detail-dates"><span>${dateRange(card.arrival, card.departure)}, ${tripLength(card.arrival, card.departure)}</span><span class="countdown">${countdown(card)}</span></p>
@@ -124,6 +131,13 @@ export function openDetail(id) {
 
   renderName(card);
   initNotes(card);
+  root.querySelectorAll('.trip-type button').forEach((b) =>
+    b.addEventListener('click', () => {
+      card.type = b.dataset.type;
+      updateCard(card.id, { type: card.type });
+      root.querySelectorAll('.trip-type button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.type === card.type)));
+    })
+  );
 
   // Show the city name in the bar once the big title has scrolled away.
   const bar = root.querySelector('.detail-bar');
@@ -261,8 +275,20 @@ async function section(card, key, load, render) {
   }
 }
 
+let clockTimer;
+
 function loadAll(card) {
   const countryP = getCountry(card.countryCode, card.countryName);
+
+  section(card, 'facts', () => loadFacts(card), (d) => renderFacts(d, card)).then(() => {
+    // Keep the local time ticking while the card is open.
+    clearInterval(clockTimer);
+    clockTimer = setInterval(() => {
+      const el = document.querySelector('#detail [data-clock]');
+      if (!el || current?.id !== card.id || !sheet().open) return clearInterval(clockTimer);
+      el.textContent = clockIn(el.dataset.clock);
+    }, 30000);
+  });
 
   section(card, 'language', () => countryP, renderLanguage);
   section(card, 'weather', () => getWeather(card.lat, card.lon, card.arrival, card.departure), renderWeather);
@@ -295,6 +321,88 @@ function loadAll(card) {
 }
 
 /* ---------- Renderers ---------- */
+
+/* ---------- Country facts ---------- */
+
+async function loadFacts(card) {
+  const p = getProfile();
+  const cur = currencyFor(card.countryCode);
+  const homeCur = p.currency || '';
+  const settle = (pr) => pr.then((v) => ({ ok: true, v }), (e) => ({ ok: false, e }));
+  const [rate, day, tz, homeTz] = await Promise.all([
+    settle(cur && homeCur && cur !== homeCur ? getRate(homeCur, cur) : Promise.resolve(null)),
+    settle(getNationalDay(card.countryCode)),
+    settle(getTimeZone(card.lat, card.lon)),
+    settle(p.home && (p.home.lat || p.home.lon) ? getTimeZone(p.home.lat, p.home.lon) : Promise.resolve(null)),
+  ]);
+  return { cur, homeCur, rate, day, tz, homeTz, homeCC: p.home?.countryCode || null };
+}
+
+function diffText(mins) {
+  if (!mins) return t('facts.same');
+  return t(mins > 0 ? 'facts.ahead' : 'facts.behind', { n: hours(Math.abs(mins) / 60) });
+}
+
+function renderFacts(f, card) {
+  const rows = [];
+  const row = (icon, label, value, note = '') =>
+    rows.push(`<div class="fact"><dt><span aria-hidden="true">${icon}</span>${esc(label)}</dt><dd>${value}${note ? `<small>${note}</small>` : ''}</dd></div>`);
+
+  // Currency and exchange rate
+  if (f.cur) {
+    row('💶', t('facts.currency'), `${esc(currencyName(f.cur))} (${esc(f.cur)})`);
+    let rateHtml, note = '';
+    if (!f.homeCur) rateHtml = `<span class="muted">${esc(t('facts.rateSetHome'))}</span>`;
+    else if (f.cur === f.homeCur) rateHtml = esc(t('facts.rateSame'));
+    else if (f.rate.ok && f.rate.v) {
+      const r = f.rate.v.rate;
+      rateHtml = `1 ${esc(f.homeCur)} = ${esc(rateNumber(r))} ${esc(f.cur)}<br>1 ${esc(f.cur)} = ${esc(rateNumber(1 / r))} ${esc(f.homeCur)}`;
+      note = esc(t('facts.rateNote', { date: f.rate.v.date ? longDate(f.rate.v.date) : '', source: f.rate.v.source }));
+    } else rateHtml = `<span class="muted">${esc(t('facts.rateNone'))}</span>`;
+    row('💱', t('facts.rate'), rateHtml, note);
+  }
+
+  // Local time and difference to home
+  if (f.tz.ok && f.tz.v) {
+    const tz = f.tz.v;
+    const homeTz = (f.homeTz.ok && f.homeTz.v) || Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const now = new Date();
+    const diffNow = offsetMinutes(tz, now) - offsetMinutes(homeTz, now);
+    const arrival = new Date(card.arrival + 'T12:00:00Z');
+    const diffTrip = offsetMinutes(tz, arrival) - offsetMinutes(homeTz, arrival);
+    const notes = [esc(capitalizeFirst(diffText(diffNow)) + '.')];
+    if (!isPast(card) && diffTrip !== diffNow) notes.push(esc(t('facts.trip', { diff: diffText(diffTrip) })));
+    if (!(f.homeTz.ok && f.homeTz.v)) notes.push(esc(t('facts.phone')));
+    row('🕒', t('facts.time'), `<span data-clock="${esc(tz)}">${esc(clockIn(tz))}</span>`, notes.join(' '));
+  } else {
+    row('🕒', t('facts.time'), `<span class="muted">${esc(t('facts.na'))}</span>`);
+  }
+
+  // Capital
+  const capital = capitalOf(card.countryCode);
+  row('🏛️', t('facts.capital'), capital ? `<span lang="en">${esc(capital)}</span>` : `<span class="muted">${esc(t('facts.na'))}</span>`);
+
+  // Independence or national day
+  const d = f.day.ok ? f.day.v : null;
+  if (d?.covered && d.kind) {
+    const name = d.localName && d.localName !== d.name ? `${d.localName} (${d.name})` : d.name;
+    row('🎉', t(d.kind === 'independence' ? 'facts.indep' : 'facts.national'), `${esc(dayMonthLong(d.date))}`, esc(name));
+  } else {
+    row('🎉', t('facts.indep'), `<span class="muted">${esc(t(d?.covered ? 'facts.dayNone' : 'facts.dayNA'))}</span>`);
+  }
+
+  // Driving side
+  const left = drivesOnLeft(card.countryCode);
+  const differs = f.homeCC && drivesOnLeft(f.homeCC) !== left;
+  row('🚗', t('facts.drive'), `${esc(t(left ? 'facts.left' : 'facts.right'))}${differs ? ` <strong class="warn-text">(${esc(t('facts.driveDiff'))})</strong>` : ''}`);
+
+  // Measurement units
+  row('📏', t('facts.units'), esc(t(unitsKey(card.countryCode))));
+
+  return `<dl class="facts">${rows.join('')}</dl>`;
+}
+
+const capitalizeFirst = (s) => (s ? s.charAt(0).toLocaleUpperCase() + s.slice(1) : s);
 
 function renderLanguage(c) {
   if (!c.languages.length) return `<p class="muted">${esc(t('lang.none'))}</p>`;

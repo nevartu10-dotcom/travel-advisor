@@ -15,6 +15,7 @@ Each card shows:
 
 | Topic | Where it comes from |
 | --- | --- |
+| Country facts: currency, exchange rate, local time and difference to home, capital, independence/national day, driving side, measurement units | Currency, capital, driving side and units: built-in tables. Exchange rate: [Frankfurter](https://frankfurter.dev) (European Central Bank), falling back to [currency-api](https://github.com/fawazahmed0/exchange-api). Time zone: Open-Meteo. Independence/national day: Nager.Date |
 | Languages spoken | Built-in table of official and widely spoken languages per country |
 | Weather for the trip dates | [Open-Meteo](https://open-meteo.com): daily forecast up to 16 days ahead; for trips further out, the weather on the same dates last year |
 | Power plugs and voltage | Built-in table (IEC plug types), with a check against Finnish C/F plugs |
@@ -32,6 +33,7 @@ Tap the round profile button at the top right.
 
 - **Name, home address, age, gender and passport expiry date.** All optional, stored only on the phone and included in backup files.
 - **Home address** is looked up once (OpenStreetMap search) to find your country, and shown on the map with a house marker. From it the app sets your **currency** automatically, compares **plugs** and **voltage** with home, and links your home country's official travel advice where known (Finland, Sweden, Norway, Denmark, Germany, France, UK, US, Canada).
+- **Trip counts:** holiday and business trips, done and coming. Each trip has a type (Holiday / Business), chosen when creating it and changeable on the card.
 - **Passport:** trip cards warn when the passport expires before the trip ends or within 6 months after it (many countries require 6 months; Schengen 3 months). Always check the destination's entry rules.
 - **Welcome message** on start, in the main language of your home country (e.g. "Tervetuloa, Tuomas!"), with gendered forms where the language needs them (e.g. Portuguese "Bem-vinda/Bem-vindo"; neutral when gender isn't given).
 - **App language:** English, Finnish, French, German, Norwegian, Portuguese, Spanish or Swedish. Buttons, labels, dates and numbers follow the language. Content from Wikipedia, Wikivoyage and other sources stays in English.

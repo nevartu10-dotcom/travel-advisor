@@ -141,6 +141,7 @@ async function submit(e) {
     if (!place) return;
     const card = addCard({
       name: $('f-name').value.trim(),
+      type: document.querySelector('#trip-form input[name="type"]:checked')?.value || 'holiday',
       city: place.city || place.name,
       address: $('f-place').value.trim(),
       region: place.region,

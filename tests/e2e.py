@@ -50,6 +50,18 @@ def handler(route):
         print('UNEXPECTED restcountries call')
         return j({"name": {"common": "Portugal", "official": "Portuguese Republic"}, "cca2": "PT", "altSpellings": ["PT", "Portuguesa"],
                   "languages": {"por": "Portuguese", "eng": "English"}, "capital": ["Lisbon"], "currencies": {"EUR": {"name": "Euro", "symbol": "€"}}})
+    if 'open-meteo' in url and 'forecast_days=1' in url:
+        lat = float(re.search(r'latitude=([-\d.]+)', url).group(1))
+        tz = 'Europe/Helsinki' if lat > 55 else 'Asia/Tokyo' if lat > 30 and '139' in url else 'Asia/Bangkok' if lat < 20 else 'Europe/Lisbon'
+        return j({"timezone": tz, "daily": {"time": [today.isoformat()], "weather_code": [0]}})
+    if 'frankfurter' in url:
+        if 'frankfurter' in DOWN:
+            return route.abort()
+        base = re.search(r'base=(\w+)', url).group(1); sym = re.search(r'symbols=(\w+)', url).group(1)
+        table = {('EUR', 'JPY'): 163.52, ('EUR', 'USD'): 1.08}
+        return j({"amount": 1.0, "base": base, "date": "2026-11-05", "rates": {sym: table[(base, sym)]} if (base, sym) in table else {}})
+    if 'currency-api' in url:
+        return j({"date": "2026-11-05", "eur": {"thb": 38.1, "jpy": 163.0}})
     if 'open-meteo' in url:
         s = re.search(r'start_date=([\d-]+)', url).group(1); e = re.search(r'end_date=([\d-]+)', url).group(1)
         n = (datetime.date.fromisoformat(e) - datetime.date.fromisoformat(s)).days + 1
@@ -178,6 +190,11 @@ def main():
         check('Restauração' in txt and 'Public holiday' in txt, 'holiday during trip shown')
         check('Old' not in pg.inner_text('[data-topic="holidays"]'), 'holiday outside trip hidden')
         check(pg.locator('.numbers li').count() == 10 and 'Obrigado' in txt and 'Bom dia' in txt, 'Portuguese numbers + phrases')
+        facts = pg.inner_text('[data-topic="facts"]')
+        check('Euro (EUR)' in facts and 'Add your home address' in facts, 'facts: currency, asks for home for the rate')
+        check('Lisbon' in facts and 'On the right' in facts and 'Metric' in facts, 'facts: capital, driving side, units')
+        check(pg.locator('[data-clock="Europe/Lisbon"]').count() == 1 and "phone’s time zone" in facts, 'facts: local time vs phone when no home')
+        check('Independence day' in facts and 'Restoration of Independence' in facts, 'facts: independence day from holiday calendar')
         check(not pg.locator('#detail .error').count(), 'no section errors')
         pg.wait_for_selector('.safety-news h4', timeout=20000)
         sn = pg.inner_text('.safety-news')

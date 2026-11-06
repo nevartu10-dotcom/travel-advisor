@@ -113,3 +113,21 @@ export const days = (n) => daysFmt.format(n);
 const num1 = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
 const num0 = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 });
 export const number = (n, decimals = 0) => (decimals ? num1 : num0).format(n);
+
+const sig = new Intl.NumberFormat(locale, { maximumSignificantDigits: 4 });
+export const rateNumber = (n) => sig.format(n);
+
+const hoursFmt = new Intl.NumberFormat(locale, { style: 'unit', unit: 'hour', unitDisplay: 'long', maximumFractionDigits: 2 });
+export const hours = (n) => hoursFmt.format(n);
+
+const fDayMonthLong = fmt({ day: 'numeric', month: 'long' });
+export const dayMonthLong = (s) => fDayMonthLong.format(parse(s));
+
+/** Current time in a time zone, e.g. "16:05 Wed". */
+export function clockIn(timeZone, date = new Date()) {
+  try {
+    return new Intl.DateTimeFormat(locale, { timeZone, hour: '2-digit', minute: '2-digit', weekday: 'short' }).format(date);
+  } catch {
+    return '';
+  }
+}

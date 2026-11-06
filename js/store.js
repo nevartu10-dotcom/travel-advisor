@@ -85,7 +85,7 @@ export function validCard(c) {
   );
 }
 
-const TEXT_FIELDS = ['id', 'name', 'city', 'address', 'region', 'countryName', 'countryCode', 'label', 'arrival', 'departure', 'notes', 'createdAt'];
+const TEXT_FIELDS = ['id', 'name', 'type', 'city', 'address', 'region', 'countryName', 'countryCode', 'label', 'arrival', 'departure', 'notes', 'createdAt'];
 
 function cleanCard(c) {
   const out = {};

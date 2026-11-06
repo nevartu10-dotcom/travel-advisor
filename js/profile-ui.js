@@ -4,8 +4,9 @@ import { getProfile, saveProfile, passportStatus } from './profile.js';
 import { searchPlace } from './api/geocode.js';
 import { currencyFor } from './data/currencies.js';
 import { flagEmoji } from './api/country.js';
-import { t, lang, LANGUAGES, countryName, currencyName, longDate } from './i18n.js';
-import { esc, openSheet, closeSheet, toast } from './ui.js';
+import { t, tp, lang, LANGUAGES, countryName, currencyName, longDate } from './i18n.js';
+import { esc, openSheet, closeSheet, toast, isPast } from './ui.js';
+import { getCards } from './store.js';
 
 const $ = (id) => document.getElementById(id);
 let home = null; // confirmed home place for the address in the field
@@ -53,7 +54,42 @@ async function findHome() {
   }
 }
 
+/** Holiday and business trips, done and coming (ongoing trips count as coming). */
+export function tripStats(cards = getCards()) {
+  const s = { holiday: { done: 0, coming: 0 }, business: { done: 0, coming: 0 }, untyped: 0 };
+  for (const c of cards) {
+    if (c.type !== 'holiday' && c.type !== 'business') {
+      s.untyped++;
+      continue;
+    }
+    s[c.type][isPast(c) ? 'done' : 'coming']++;
+  }
+  return s;
+}
+
+function renderStats() {
+  const cards = getCards();
+  const box = $('p-stats');
+  if (!cards.length) {
+    box.innerHTML = `<h3 id="p-stats-title">${esc(t('profile.stats'))}</h3><p class="muted">${esc(t('stats.none'))}</p>`;
+    return;
+  }
+  const st = tripStats(cards);
+  const cell = (n) => `<td class="${n ? '' : 'zero'}">${n}</td>`;
+  box.innerHTML = `
+    <h3 id="p-stats-title">${esc(t('profile.stats'))}</h3>
+    <table class="stats-table">
+      <thead><tr><th scope="col"></th><th scope="col">${esc(t('stats.done'))}</th><th scope="col">${esc(t('stats.coming'))}</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">🏖️ ${esc(t('type.holiday'))}</th>${cell(st.holiday.done)}${cell(st.holiday.coming)}</tr>
+        <tr><th scope="row">💼 ${esc(t('type.business'))}</th>${cell(st.business.done)}${cell(st.business.coming)}</tr>
+      </tbody>
+    </table>
+    ${st.untyped ? `<p class="field-note muted">${esc(tp('stats.untyped', st.untyped))}</p>` : ''}`;
+}
+
 export function openProfile() {
+  renderStats();
   const p = getProfile();
   $('p-name').value = p.name || '';
   $('p-address').value = p.address || '';

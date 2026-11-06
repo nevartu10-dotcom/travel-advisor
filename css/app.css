@@ -313,6 +313,40 @@ main {
 .field-note.warn { color: var(--warn); font-weight: 600; }
 .currency { margin: 0; display: grid; gap: 2px; }
 
+/* Trip type: segmented control in the form and on the card */
+.segmented-field { border: 0; padding: 0; margin: 0; }
+.segmented-field legend { padding: 0; margin-bottom: 6px; font-size: var(--step--1); font-weight: 600; color: var(--slate); }
+.segmented { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; background: var(--surface); }
+.segmented label { position: relative; cursor: pointer; }
+.segmented input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.segmented span { display: grid; place-items: center; min-height: 44px; font-weight: 600; color: var(--slate); }
+.segmented label + label span { border-left: 1px solid var(--rule); }
+.segmented input:checked + span { background: var(--ink); color: var(--paper); }
+.segmented input:focus-visible + span { outline: 3px solid var(--blue); outline-offset: -3px; }
+.trip-type { display: inline-flex; margin: 2px 0 10px; border: 1px solid color-mix(in srgb, var(--chrome-ink) 35%, transparent); border-radius: 999px; overflow: hidden; }
+.trip-type button { border: 0; background: none; color: color-mix(in srgb, var(--chrome-ink) 75%, transparent); font: inherit; font-size: var(--step--1); font-weight: 600; padding: 5px 14px; cursor: pointer; }
+.trip-type button[aria-pressed="true"] { background: var(--chrome-ink); color: var(--chrome); }
+
+/* Country facts */
+.facts { margin: 0; display: grid; gap: 0; }
+.fact { display: grid; grid-template-columns: minmax(118px, 38%) 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px dashed var(--rule); }
+.fact:last-child { border-bottom: 0; }
+.fact dt { color: var(--slate); font-weight: 500; display: flex; gap: 8px; align-items: baseline; }
+.fact dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.fact dd small { display: block; margin-top: 2px; font-weight: 400; color: var(--slate); font-size: var(--step--1); }
+.warn-text { color: var(--warn); font-weight: 600; }
+[data-clock] { font-size: var(--step-1); }
+
+/* Profile: trip counts */
+.stats h3 { margin: 4px 0 8px; font-size: var(--step-1); font-weight: 600; }
+.stats-table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+.stats-table th, .stats-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--rule); }
+.stats-table thead th { font-size: var(--step--1); color: var(--slate); font-weight: 600; }
+.stats-table tbody tr:last-child th, .stats-table tbody tr:last-child td { border-bottom: 0; }
+.stats-table td { font-size: var(--step-2); font-weight: 800; font-variant-numeric: tabular-nums; width: 28%; }
+.stats-table td.zero { color: var(--slate); font-weight: 500; }
+.stats + .field-note { margin-top: 6px; }
+
 /* Passport notice on a trip card */
 .topic.passport .verdict { margin: 0; }
 .topic.passport-expired .verdict { color: var(--danger); }

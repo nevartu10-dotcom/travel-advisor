@@ -5,7 +5,7 @@ Run:  python3 -m http.server 8765  (from repo root, in another shell)
 """
 import sys, json, datetime, pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from e2e import handler, BASE, ARR, DEP  # noqa: E402
+from e2e import handler, BASE, ARR, DEP, DOWN  # noqa: E402
 from playwright.sync_api import sync_playwright
 
 SHOTS = pathlib.Path(sys.argv[sys.argv.index('--shots') + 1]) if '--shots' in sys.argv else None
@@ -110,6 +110,41 @@ with sync_playwright() as p:
     check('Your home plugs (C/F) fit here' in txt, 'plugs compared with home country (Finland)')
     check('um.fi' in txt, 'official advice link for Finnish home')
     close_card(pg)
+
+    # Trip type, country facts with a home country, profile trip counts
+    JP = {'id': 'tyo', 'city': 'Tokyo', 'region': 'Tokyo', 'countryName': 'Japan', 'countryCode': 'JP', 'lat': 35.68, 'lon': 139.69,
+          'arrival': (ARR + datetime.timedelta(days=30)).isoformat(), 'departure': (ARR + datetime.timedelta(days=36)).isoformat(), 'type': 'business'}
+    OLD = {'id': 'old', 'city': 'Bangkok', 'region': '', 'countryName': 'Thailand', 'countryCode': 'TH', 'lat': 13.75, 'lon': 100.5,
+           'arrival': '2025-01-10', 'departure': '2025-01-20', 'type': 'holiday'}
+    pg.evaluate(f"""() => {{ const c = JSON.parse(localStorage.getItem('travel-advisor.cards.v1')); c.push({json.dumps(JP)}, {json.dumps(OLD)}); localStorage.setItem('travel-advisor.cards.v1', JSON.stringify(c)); }}""")
+    pg.reload(); pg.click('.welcome-close')
+    pg.click('#tab-list'); pg.locator('.ticket', has_text='Tokyo').click(); pg.wait_for_selector('#detail-sheet[open]')
+    pg.wait_for_function("() => !document.querySelector('#detail [data-topic=facts] .skeleton')", timeout=15000)
+    facts = pg.inner_text('[data-topic="facts"]')
+    check('1 EUR = 163.5 JPY' in facts and 'European Central Bank' in facts, f'facts: exchange rate from home currency {facts[:200]!r}')
+    check('7 hours ahead of home' in facts, 'facts: time difference to home (Tokyo vs Helsinki)')
+    check('On the left' in facts and 'opposite side to home' in facts, 'facts: left-hand traffic flagged as different from home')
+    check(pg.locator('.trip-type [data-type="business"][aria-pressed="true"]').count() == 1, 'card shows trip type')
+    shot(pg, 'p02c-facts-tokyo.png')
+    close_card(pg)
+    pg.locator('.ticket', has_text='Bangkok').click(); pg.wait_for_selector('#detail-sheet[open]')
+    DOWN.add('frankfurter')
+    pg.wait_for_function("() => !document.querySelector('#detail [data-topic=facts] .skeleton')", timeout=15000)
+    check('1 EUR = 38.1 THB' in pg.inner_text('[data-topic="facts"]'), 'facts: rate falls back to currency-api when ECB source fails')
+    DOWN.discard('frankfurter')
+    close_card(pg)
+    pg.locator('.ticket', has_text='Family summer holiday').click(); pg.wait_for_selector('#detail-sheet[open]')
+    check(pg.locator('.trip-type [aria-pressed="true"]').count() == 0, 'old trip without a type shows none selected')
+    pg.click('.trip-type [data-type="holiday"]')
+    check(pg.locator('.trip-type [data-type="holiday"][aria-pressed="true"]').count() == 1, 'trip type can be set on the card')
+    check('Same currency as at home' in pg.inner_text('[data-topic="facts"]'), 'facts: same currency (EUR) noted')
+    close_card(pg)
+    pg.click('#profile-btn'); pg.wait_for_selector('#profile-sheet[open]')
+    rows = pg.locator('.stats-table tbody tr').all_inner_texts()
+    check(rows[0].split() [-2:] == ['1', '1'] and rows[1].split()[-2:] == ['0', '1'], f'profile counts holiday/business done/coming {rows}')
+    shot(pg, 'p02d-profile-stats.png')
+    pg.click('#profile-sheet [data-close]')
+    pg.evaluate("""() => { const c = JSON.parse(localStorage.getItem('travel-advisor.cards.v1')).filter(x => x.id === 'lis'); localStorage.setItem('travel-advisor.cards.v1', JSON.stringify(c)); }""")
 
     # Reload: welcome in the home country's language (Finnish), even with English interface
     pg.reload()

@@ -82,6 +82,13 @@
           <span><span data-i18n="form.name"></span> <small class="optional" data-i18n="form.optional"></small></span>
           <input name="name" id="f-name" maxlength="60" autocomplete="off" data-i18n-ph="form.namePh">
         </label>
+        <fieldset class="field segmented-field">
+          <legend data-i18n="form.type"></legend>
+          <div class="segmented" role="radiogroup">
+            <label><input type="radio" name="type" value="holiday" checked><span data-i18n="type.holiday"></span></label>
+            <label><input type="radio" name="type" value="business"><span data-i18n="type.business"></span></label>
+          </div>
+        </fieldset>
         <label class="field">
           <span data-i18n="form.country"></span>
           <input name="country" id="f-country" autocomplete="country-name" required data-i18n-ph="form.countryPh">
@@ -126,6 +133,7 @@
       </div>
       <div class="sheet-body form-body profile-body">
         <p class="muted" data-i18n="profile.intro"></p>
+        <section class="stats" id="p-stats" aria-labelledby="p-stats-title"></section>
         <label class="field">
           <span data-i18n="profile.name"></span>
           <input id="p-name" maxlength="80" autocomplete="name">
