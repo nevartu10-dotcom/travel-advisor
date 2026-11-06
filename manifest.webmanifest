@@ -1,6 +1,6 @@
 {
-  "name": "Travel Advisor",
-  "short_name": "Travel",
+  "name": "Prepvoy",
+  "short_name": "Prepvoy",
   "description": "Trip cards with language, weather, plugs, safety, food, sights, news, holidays and phrases for your destination.",
   "start_url": "./#map",
   "scope": "./",

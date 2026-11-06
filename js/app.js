@@ -285,6 +285,24 @@ function updateOnline() {
   $('net-status').hidden = navigator.onLine;
 }
 
+/** Remove the opening animation when it ends (or after a safety timeout), then continue. */
+function afterSplash(done) {
+  const s = $('splash');
+  if (!s) return done();
+  let finished = false;
+  const end = () => {
+    if (finished) return;
+    finished = true;
+    s.remove();
+    done();
+  };
+  // The fade-out may already be over if the app was slow to load; `finished` covers both cases.
+  const fade = s.getAnimations?.().find((a) => a.animationName === 'splash-out');
+  if (fade) fade.finished.then(end, end);
+  // With "reduce motion" on, animations are off: show the logo still, briefly.
+  setTimeout(end, fade ? 2600 : 900);
+}
+
 function start() {
   initMap({ onOpenCard: openDetail, onAddAt: (lat, lon) => openForm({ lat, lon }) });
   initForm({
@@ -365,9 +383,12 @@ function start() {
   }
   setView(initial);
   render();
-  renderWarning({ opening: true });
   renderAvatar();
-  showWelcome();
+  // Welcome and checklist warning come in once the opening animation has finished.
+  afterSplash(() => {
+    renderWarning({ opening: true });
+    showWelcome();
+  });
   if (view === 'map') setTimeout(() => fitAll(getCards()), 100);
 
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {

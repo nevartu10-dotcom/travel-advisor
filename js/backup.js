@@ -7,7 +7,7 @@ import { getProfile, saveProfile, cleanProfile } from './profile.js';
 import { getLists, importLists } from './checklists.js';
 import { t, stamp } from './i18n.js';
 
-const FORMAT = 'travel-advisor-backup';
+const FORMAT = 'travel-advisor-backup'; // kept from the app's first name, so old backups still restore
 
 function backupBlob() {
   const data = { format: FORMAT, version: 3, exportedAt: new Date().toISOString(), cards: getCards(), profile: getProfile(), checklists: getLists() };
@@ -15,7 +15,7 @@ function backupBlob() {
 }
 
 function fileName() {
-  return `travel-advisor-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  return `prepvoy-backup-${new Date().toISOString().slice(0, 10)}.json`;
 }
 
 /** Save the backup file to the device (Downloads on Android, Files on iPhone). */

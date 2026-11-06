@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Travel Advisor</title>
+  <title>Prepvoy</title>
   <meta name="description" content="Trip cards with language, weather, plugs, safety, food, sights, news, holidays and phrases for your destination.">
   <meta name="theme-color" content="#14213D">
   <link rel="manifest" href="manifest.webmanifest">
@@ -18,6 +18,21 @@
   <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
+  <!-- Opening animation: shown once per app session; app.js removes it when it ends. -->
+  <div class="splash" id="splash" aria-hidden="true">
+    <div class="splash-inner">
+      <svg class="splash-mark" viewBox="0 0 160 210">
+        <ellipse class="splash-shadow" cx="80" cy="200" rx="34" ry="7"/>
+        <g class="splash-pin">
+          <path d="M80 188c-16-24-62-64-62-108a62 62 0 0 1 124 0c0 44-46 84-62 108Z"/>
+          <path class="splash-check" d="M52 82l20 20 36-38" pathLength="100"/>
+        </g>
+      </svg>
+      <p class="splash-word">Prep<span>voy</span></p>
+      <i class="splash-stripe"></i>
+    </div>
+  </div>
+  <script>try { if (sessionStorage.getItem('prepvoy.splash')) document.getElementById('splash').remove(); else sessionStorage.setItem('prepvoy.splash', '1'); } catch (e) {}</script>
   <header class="appbar">
     <h1 class="appbar-title" id="appbar-title"></h1>
     <span class="appbar-actions">

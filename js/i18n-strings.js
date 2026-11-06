@@ -220,9 +220,9 @@ const EN = {
   'backup.updated': '{n} updated',
   'backup.skipped': '{n} skipped (incomplete)',
   'backup.profile': 'profile',
-  'backup.tooLarge': 'That file is too large to be a Travel Advisor backup',
-  'backup.unreadable': 'That file isn’t a Travel Advisor backup (it couldn’t be read)',
-  'backup.notBackup': 'That file isn’t a Travel Advisor backup',
+  'backup.tooLarge': 'That file is too large to be a Prepvoy backup',
+  'backup.unreadable': 'That file isn’t a Prepvoy backup (it couldn’t be read)',
+  'backup.notBackup': 'That file isn’t a Prepvoy backup',
   'backup.noTrips': 'No trips found in that file',
 
   'profile.title': 'Profile',

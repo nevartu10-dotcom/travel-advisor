@@ -1,8 +1,12 @@
-# Travel Advisor
+# Prepvoy
 
 A progressive web app that turns each trip into an advisory card. Add a destination and dates, and the card shows what you need to know before you go.
 
 **Live app:** https://nevartu10-dotcom.github.io/travel-advisor/ (open on your phone and choose *Add to Home Screen* / *Install app*).
+
+Prepvoy (prep + voyage) was first called Travel Advisor; the web address and stored data keep that name, so nothing is lost.
+
+When the app opens, a short animation (under 2 seconds) shows the logo: a map pin with a check mark. It plays once each time you open the app, not when the page reloads for a language change, and is a still image when the phone's "reduce motion" setting is on.
 
 ## What it does
 
@@ -96,6 +100,7 @@ python3 -m http.server 8765 &
 python3 tests/e2e.py              # add --shots DIR to save screenshots
 python3 tests/e2e_profile.py      # profile, languages, welcome, passport
 python3 tests/e2e_checklists.py   # checklists tab, card checklist, warning, backup
+python3 tests/e2e_splash.py       # name, icons, opening animation
 ```
 
 ## Project layout

@@ -64,6 +64,7 @@ with sync_playwright() as p:
     ctx = b.new_context(viewport={'width': 390, 'height': 844}, device_scale_factor=2, is_mobile=True, has_touch=True,
                         service_workers='block', locale='en-GB')
     ctx.route('**/*', handler)
+    ctx.add_init_script("try { sessionStorage.setItem('prepvoy.splash', '1') } catch (e) {}")  # skip the opening animation
     pg = ctx.new_page()
     pg.on('pageerror', lambda e: errors.append(str(e)))
     # Mocked outages produce network errors on purpose; only real script errors count here.
