@@ -135,6 +135,7 @@ with sync_playwright() as p:
     check(card(pg, 'osl').get('checked') == [biz['items'][0]['id']], 'tick saved on the trip')
     sec = pg.locator('#d-checklist-sec')
     check(sec.locator('.cl-add, [data-remove], .drag-handle').count() == 0, 'card has no add, remove or reorder controls')
+    check(pg.evaluate("() => [...document.querySelectorAll('#detail section.topic')].pop().id") == 'd-checklist-sec', 'checklist is the last section of the card')
     close_trip(pg)
 
     # Editing happens in the Checklists tab: add an item, drag to reorder

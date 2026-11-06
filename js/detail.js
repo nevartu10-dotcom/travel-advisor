@@ -99,15 +99,15 @@ export function openDetail(id, { focus } = {}) {
             <h3 id="t-${key}"><span class="h-icon" aria-hidden="true">${icon}</span>${esc(t(`topic.${key}`))}</h3>
             <div class="topic-body"></div>
           </section>`).join('')}
-        <section class="topic checklist" id="d-checklist-sec" aria-labelledby="t-checklist">
-          <h3 id="t-checklist"><span class="h-icon" aria-hidden="true">🧳</span>${esc(t('topic.checklist'))}</h3>
-          <div class="topic-body" id="d-checklist"></div>
-        </section>
         <section class="topic notes" aria-labelledby="t-notes">
           <h3 id="t-notes"><span class="h-icon" aria-hidden="true">📝</span>${esc(t('topic.notes'))}</h3>
           <label class="visually-hidden" for="d-notes">${esc(t('notes.label'))}</label>
           <textarea id="d-notes" rows="6" placeholder="${esc(t('notes.ph'))}">${esc(card.notes || '')}</textarea>
           <p class="notes-meta"><span id="d-notes-count"></span><span id="d-notes-status" aria-live="polite"></span></p>
+        </section>
+        <section class="topic checklist" id="d-checklist-sec" aria-labelledby="t-checklist">
+          <h3 id="t-checklist"><span class="h-icon" aria-hidden="true">🧳</span>${esc(t('topic.checklist'))}</h3>
+          <div class="topic-body" id="d-checklist"></div>
         </section>
         <div class="detail-actions">
           <button class="btn btn-quiet" type="button" data-showmap>${esc(t('detail.showMap'))}</button>
