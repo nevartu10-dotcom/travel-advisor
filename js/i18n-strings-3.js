@@ -14,7 +14,7 @@ export const NB = {
   'aria.views': 'Visninger',
   'aria.addTrip': 'Legg til en reise',
   'tab.map': 'Kart',
-  'tab.list': 'Liste',
+  'tab.list': 'Reiser',
 
   'search.label': 'Søk etter en adresse eller by',
   'search.placeholder': 'Søk etter adresse eller by',
@@ -376,7 +376,7 @@ export const PT = {
   'aria.views': 'Vistas',
   'aria.addTrip': 'Adicionar uma viagem',
   'tab.map': 'Mapa',
-  'tab.list': 'Lista',
+  'tab.list': 'Viagens',
 
   'search.label': 'Pesquisar uma morada ou cidade',
   'search.placeholder': 'Pesquisar morada ou cidade',
@@ -738,7 +738,7 @@ export const ES = {
   'aria.views': 'Vistas',
   'aria.addTrip': 'Añadir un viaje',
   'tab.map': 'Mapa',
-  'tab.list': 'Lista',
+  'tab.list': 'Viajes',
 
   'search.label': 'Buscar una dirección o ciudad',
   'search.placeholder': 'Buscar dirección o ciudad',
@@ -1100,7 +1100,7 @@ export const SV = {
   'aria.views': 'Vyer',
   'aria.addTrip': 'Lägg till en resa',
   'tab.map': 'Karta',
-  'tab.list': 'Lista',
+  'tab.list': 'Resor',
 
   'search.label': 'Sök efter en adress eller stad',
   'search.placeholder': 'Sök adress eller stad',

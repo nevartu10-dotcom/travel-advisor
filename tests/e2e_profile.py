@@ -62,7 +62,7 @@ with sync_playwright() as p:
     pg.wait_for_selector('#welcome:not([hidden])')
     check(pg.inner_text('.welcome-hello') == 'Welcome!', 'generic welcome without a profile')
     check(pg.locator('.welcome-setup').count() == 1, 'welcome offers profile setup')
-    check(pg.inner_text('#appbar-title') == 'Trip map' and pg.inner_text('#tab-list') == 'List', 'English interface by default')
+    check(pg.inner_text('#appbar-title') == 'Trip map' and pg.inner_text('#tab-list') == 'Trips', 'English interface by default')
     shot(pg, 'p01-welcome-new.png')
 
     # Profile: invalid birth date, unknown address, then a valid profile
@@ -176,7 +176,7 @@ with sync_playwright() as p:
         pg.click('#p-save')
     pg.wait_for_selector('#welcome:not([hidden])')
     check(pg.evaluate('document.documentElement.lang') == 'fi', 'page language set to Finnish')
-    check(pg.inner_text('#appbar-title') in ('Matkakartta', 'Matkat') and pg.inner_text('#tab-list') == 'Lista', f'interface in Finnish {pg.inner_text("#appbar-title")!r}')
+    check(pg.inner_text('#appbar-title') in ('Matkakartta', 'Matkat') and pg.inner_text('#tab-list') == 'Matkat', f'interface in Finnish {pg.inner_text("#appbar-title")!r}')
     check('Seuraava matkasi' in pg.inner_text('.welcome-line'), 'welcome line in Finnish')
     check(pg.inner_text('.home-label') == 'Koti', 'home label in Finnish')
     shot(pg, 'p04-map-fi.png')

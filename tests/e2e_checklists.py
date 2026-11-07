@@ -75,7 +75,7 @@ with sync_playwright() as p:
 
     # Third tab, bottom right, with a starter list
     tabs = pg.locator('.tabbar .tab').all_inner_texts()
-    check([x.strip() for x in tabs] == ['Map', 'List', 'Checklists'], f'three tabs, checklists last {tabs}')
+    check([x.strip() for x in tabs] == ['Map', 'Trips', 'Checklists'], f'three tabs, checklists last {tabs}')
     pg.click('#tab-checklists')
     check(pg.inner_text('#appbar-title') == 'Checklists' and not pg.is_hidden('#view-checklists'), 'checklists tab opens')
     check(pg.locator('.cl-row').count() == 1 and 'Packing list' in pg.inner_text('.cl-row') and '12 items' in pg.inner_text('.cl-row'),

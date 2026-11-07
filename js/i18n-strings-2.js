@@ -14,7 +14,7 @@ export const FI = {
   'aria.views': 'Näkymät',
   'aria.addTrip': 'Lisää matka',
   'tab.map': 'Kartta',
-  'tab.list': 'Lista',
+  'tab.list': 'Matkat',
 
   'search.label': 'Hae osoitetta tai kaupunkia',
   'search.placeholder': 'Hae osoite tai kaupunki',
@@ -376,7 +376,7 @@ export const FR = {
   'aria.views': 'Vues',
   'aria.addTrip': 'Ajouter un voyage',
   'tab.map': 'Carte',
-  'tab.list': 'Liste',
+  'tab.list': 'Voyages',
 
   'search.label': 'Rechercher une adresse ou une ville',
   'search.placeholder': 'Rechercher une adresse ou une ville',
@@ -738,7 +738,7 @@ export const DE = {
   'aria.views': 'Ansichten',
   'aria.addTrip': 'Reise hinzufügen',
   'tab.map': 'Karte',
-  'tab.list': 'Liste',
+  'tab.list': 'Reisen',
 
   'search.label': 'Nach Adresse oder Stadt suchen',
   'search.placeholder': 'Adresse oder Stadt suchen',

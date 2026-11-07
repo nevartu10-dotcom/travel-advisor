@@ -12,7 +12,7 @@ When the app opens, a short animation (under 2 seconds) shows the logo: a map pi
 
 - **Two tabs:** trips as pins on a map, and trips as a list.
 - **Open a card** by tapping a pin or a list item.
-- **Add a trip** by typing an address or city in the search bar on the map, with the + button in the list, or by tapping a spot on the map. From search or a map tap, the place is filled in for you and only the dates are left.
+- **Add a trip** by typing an address or city in the search bar on the map, with the + button in the Trips tab, or by tapping a spot on the map. From search or a map tap, the place is filled in for you and only the dates are left.
 - Each trip needs a country, a city or address, and arrival and departure dates. You can also give it a name (e.g. "Family summer holiday"), now or later from the card; the name shows above the pin on the map and as the title in the list.
 
 Each card shows:

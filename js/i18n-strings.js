@@ -17,7 +17,7 @@ const EN = {
   'aria.views': 'Views',
   'aria.addTrip': 'Add a trip',
   'tab.map': 'Map',
-  'tab.list': 'List',
+  'tab.list': 'Trips',
 
   'search.label': 'Search for an address or city',
   'search.placeholder': 'Search an address or city',
