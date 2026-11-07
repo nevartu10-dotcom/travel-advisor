@@ -131,6 +131,8 @@ const EN = {
   'plugs.none': 'No plug information for this country.',
   'plugs.type': 'Type {t}',
   'plugs.note': 'Plugs shown from the front, pins facing you. Not to scale.',
+  'plugs.older': 'Also found in older buildings or less common sockets:',
+  'plugs.multi': '🔌 {n} plug types are in use here ({types}), and sockets differ from building to building. Bring a universal multi-adapter.',
   'plugs.fit': '✓ Your home plugs ({types}) fit here.',
   'plugs.noFit': '⚠ Your home plugs ({types}) don’t fit. Bring a travel adapter.',
   'plugs.partial': '✓ Some of your home plugs fit: type {fit}. Type {other} needs an adapter.',

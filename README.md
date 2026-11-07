@@ -22,7 +22,7 @@ Each card shows:
 | Country facts: currency, exchange rate, local time and difference to home, capital, independence/national day, driving side, measurement units | Currency, capital, driving side and units: built-in tables. Exchange rate: [Frankfurter](https://frankfurter.dev) (European Central Bank), falling back to [currency-api](https://github.com/fawazahmed0/exchange-api). Time zone: Open-Meteo. Independence/national day: Nager.Date |
 | Languages spoken | Built-in table of official and widely spoken languages per country |
 | Weather for the trip dates | [Open-Meteo](https://open-meteo.com): daily forecast up to 16 days ahead; for trips further out, the weather on the same dates last year |
-| Power plugs and voltage | Built-in table (IEC plug types), with a check against Finnish C/F plugs |
+| Power plugs and voltage | Built-in table (IEC / WorldStandards, checked against Wikipedia's *Mains electricity by country*), with types in regular use and types also found in older buildings (e.g. US-style A/B in Brazil), a check against your home plugs, and a multi-adapter tip when 3 or more types are in use (unless your home plugs already fit every one) |
 | Safety (max 100 words) | The "Stay safe" sections of [Wikivoyage](https://en.wikivoyage.org)'s city and country guides; the official U.S./Canadian advisory level when their servers allow it; plus up to 3 recent safety-related events from Wikipedia's Current events, shown as context rather than a rating |
 | Top 5 restaurants nearby | [OpenStreetMap](https://www.openstreetmap.org) via Overpass (two servers), within 1.2 km; falls back to OpenStreetMap's Nominatim search when Overpass is busy |
 | Top 5 sights nearby | [Wikipedia](https://en.wikipedia.org): places with articles within 10 km, ranked by how many people read them in the last 30 days (weighted by distance), with photo and short description |
@@ -101,6 +101,7 @@ python3 tests/e2e.py              # add --shots DIR to save screenshots
 python3 tests/e2e_profile.py      # profile, languages, welcome, passport
 python3 tests/e2e_checklists.py   # checklists tab, card checklist, warning, backup
 python3 tests/e2e_splash.py       # name, icons, opening animation
+python3 tests/e2e_plugs.py        # older plug types, multi-adapter tip
 ```
 
 ## Project layout

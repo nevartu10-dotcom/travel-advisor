@@ -460,8 +460,14 @@ function renderPlugs(p) {
     <div class="plugs">
       ${p.types.map((x) => `<div class="plug">${plugArt(x)}<span><strong>${esc(t('plugs.type', { t: x }))}</strong><br><small>${esc(t(`plug.${x}`))}</small></span></div>`).join('')}
     </div>
+    ${p.older.length ? `
+      <p class="plug-older-title">${esc(t('plugs.older'))}</p>
+      <div class="plugs plugs-older">
+        ${p.older.map((x) => `<div class="plug">${plugArt(x)}<span><strong>${esc(t('plugs.type', { t: x }))}</strong><br><small>${esc(t(`plug.${x}`))}</small></span></div>`).join('')}
+      </div>` : ''}
     <p class="source plug-note">${esc(t('plugs.note'))}</p>
     ${verdict}
+    ${p.multi ? `<p class="verdict warn plug-multi">${esc(t('plugs.multi', { n: p.all.length, types: p.all.join(', ') }))}</p>` : ''}
     <p>${esc(t('plugs.voltage', { v: p.voltage }))}${h?.voltageDiffers ? ` ${esc(t('plugs.voltNote', { home: h.voltage }))}` : ''}</p>`;
 }
 

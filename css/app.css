@@ -642,3 +642,6 @@ li.dragging .drag-handle { cursor: grabbing; color: var(--ink); }
 @media (prefers-reduced-motion: reduce) {
   .splash-check { stroke-dashoffset: 0; } /* animations are off: show the finished logo */
 }
+
+.plug-older-title { margin: 14px 0 6px; font-weight: 600; color: var(--slate); font-size: var(--step--1); }
+.plugs-older .plug { opacity: 0.85; }
