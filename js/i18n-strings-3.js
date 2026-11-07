@@ -15,6 +15,8 @@ export const NB = {
   'aria.addTrip': 'Legg til en reise',
   'tab.map': 'Kart',
   'tab.list': 'Reiser',
+  'list.showOnMap': 'Vis på kartet',
+  'map.shownAgain': '{title} vises på kartet igjen.',
 
   'search.label': 'Søk etter en adresse eller by',
   'search.placeholder': 'Søk etter adresse eller by',
@@ -377,6 +379,8 @@ export const PT = {
   'aria.addTrip': 'Adicionar uma viagem',
   'tab.map': 'Mapa',
   'tab.list': 'Viagens',
+  'list.showOnMap': 'Mostrar no mapa',
+  'map.shownAgain': '{title} volta a aparecer no mapa.',
 
   'search.label': 'Pesquisar uma morada ou cidade',
   'search.placeholder': 'Pesquisar morada ou cidade',
@@ -739,6 +743,8 @@ export const ES = {
   'aria.addTrip': 'Añadir un viaje',
   'tab.map': 'Mapa',
   'tab.list': 'Viajes',
+  'list.showOnMap': 'Mostrar en el mapa',
+  'map.shownAgain': '{title} vuelve a aparecer en el mapa.',
 
   'search.label': 'Buscar una dirección o ciudad',
   'search.placeholder': 'Buscar dirección o ciudad',
@@ -1101,6 +1107,8 @@ export const SV = {
   'aria.addTrip': 'Lägg till en resa',
   'tab.map': 'Karta',
   'tab.list': 'Resor',
+  'list.showOnMap': 'Visa på kartan',
+  'map.shownAgain': '{title} visas på kartan igen.',
 
   'search.label': 'Sök efter en adress eller stad',
   'search.placeholder': 'Sök adress eller stad',

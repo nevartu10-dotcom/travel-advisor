@@ -15,6 +15,8 @@ export const FI = {
   'aria.addTrip': 'Lisää matka',
   'tab.map': 'Kartta',
   'tab.list': 'Matkat',
+  'list.showOnMap': 'Näytä kartalla',
+  'map.shownAgain': '{title} näkyy taas kartalla.',
 
   'search.label': 'Hae osoitetta tai kaupunkia',
   'search.placeholder': 'Hae osoite tai kaupunki',
@@ -377,6 +379,8 @@ export const FR = {
   'aria.addTrip': 'Ajouter un voyage',
   'tab.map': 'Carte',
   'tab.list': 'Voyages',
+  'list.showOnMap': 'Afficher sur la carte',
+  'map.shownAgain': '{title} est de nouveau affiché sur la carte.',
 
   'search.label': 'Rechercher une adresse ou une ville',
   'search.placeholder': 'Rechercher une adresse ou une ville',
@@ -739,6 +743,8 @@ export const DE = {
   'aria.addTrip': 'Reise hinzufügen',
   'tab.map': 'Karte',
   'tab.list': 'Reisen',
+  'list.showOnMap': 'Auf der Karte zeigen',
+  'map.shownAgain': '{title} wird wieder auf der Karte gezeigt.',
 
   'search.label': 'Nach Adresse oder Stadt suchen',
   'search.placeholder': 'Adresse oder Stadt suchen',

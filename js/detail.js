@@ -59,6 +59,21 @@ const HOME_ADVICE = {
 
 const cname = (card) => countryName(card.countryCode, card.countryName);
 
+/** Scroll to a section and keep it there while the sections above it load (until the user scrolls). */
+function keepInView(el) {
+  const go = () => el.isConnected && el.scrollIntoView({ block: 'start' });
+  go();
+  const root = document.getElementById('detail');
+  const ro = new ResizeObserver(go);
+  ro.observe(el.parentElement); // the column of sections, which grows as they load
+  const stop = () => {
+    ro.disconnect();
+    ['touchstart', 'wheel', 'keydown', 'pointerdown'].forEach((ev) => root.removeEventListener(ev, stop));
+  };
+  ['touchstart', 'wheel', 'keydown', 'pointerdown'].forEach((ev) => root.addEventListener(ev, stop, { passive: true }));
+  setTimeout(stop, 8000);
+}
+
 export function openDetail(id, { focus } = {}) {
   const card = getCard(id);
   if (!card) return;
@@ -151,7 +166,7 @@ export function openDetail(id, { focus } = {}) {
     .observe(root.querySelector('#d-city'));
 
   openSheet(sheet()).then(() => {
-    if (focus === 'checklist') document.getElementById('d-checklist-sec').scrollIntoView({ block: 'start' });
+    if (focus === 'checklist') keepInView(document.getElementById('d-checklist-sec'));
   });
   root.scrollTop = 0;
   loadAll(card);

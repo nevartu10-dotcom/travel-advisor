@@ -645,3 +645,24 @@ li.dragging .drag-handle { cursor: grabbing; color: var(--ink); }
 
 .plug-older-title { margin: 14px 0 6px; font-weight: 600; color: var(--slate); font-size: var(--step--1); }
 .plugs-older .plug { opacity: 0.85; }
+
+/* Past trips: "Show on map" switch under the ticket */
+.has-map-toggle .ticket { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.ticket-map {
+  display: flex; align-items: center; justify-content: flex-end; gap: 10px; min-height: 44px;
+  padding: 4px 16px; margin-top: -1px; cursor: pointer;
+  border: 1px solid var(--rule); border-radius: 0 0 6px 6px; background: var(--surface);
+  font-size: var(--step--1); font-weight: 600; color: var(--slate);
+}
+.ticket-map input {
+  appearance: none; -webkit-appearance: none; margin: 0; order: 2; flex: none; cursor: pointer;
+  width: 40px; height: 24px; border-radius: 12px; background: var(--rule); position: relative; transition: background 0.15s;
+}
+.ticket-map input::after {
+  content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 3px rgb(0 0 0 / 0.3); transition: transform 0.15s;
+}
+.ticket-map input:checked { background: var(--brand); }
+.ticket-map input:checked::after { transform: translateX(16px); }
+.ticket-map input:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.ticket-map:has(input:checked) { color: var(--ink); }

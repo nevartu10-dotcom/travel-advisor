@@ -1,6 +1,6 @@
 // App entry: tabs, list rendering, wiring.
 import { applyStatic, t, tp, countryName, lang } from './i18n.js';
-import { getCards, onChange, setMeta } from './store.js';
+import { getCards, onChange, setMeta, updateCard } from './store.js';
 import { getLists } from './checklists.js';
 import { initMap, renderPins, renderHome, refreshSize, focusCard, fitAll, showPlace } from './map.js';
 import { searchPlace } from './api/geocode.js';
@@ -13,7 +13,7 @@ import { birthdayGreeting } from './data/birthday.js';
 import { seedIfNew, onListsChange, progress } from './checklists.js';
 import { initChecklists, renderChecklistsTab, warningLines } from './checklists-ui.js';
 import { flagEmoji } from './api/country.js';
-import { esc, dateRange, countdown, isPast, isNow, toast, tripTitle, tripLabel, openSheet, closeSheet } from './ui.js';
+import { esc, dateRange, countdown, isPast, isNow, toast, tripTitle, tripLabel, openSheet, closeSheet, onMap } from './ui.js';
 
 const $ = (id) => document.getElementById(id);
 let view = 'map';
@@ -57,11 +57,11 @@ function renderList(cards) {
     list.length
       ? `<div class="list-group"><h2>${esc(title)}</h2><ul class="tickets">${list
           .map(
-            (c) => `<li><button class="ticket${isPast(c) ? ' past' : ''}" type="button" data-id="${esc(c.id)}">
+            (c) => `<li${isPast(c) ? ' class="has-map-toggle"' : ''}><button class="ticket${isPast(c) ? ' past' : ''}" type="button" data-id="${esc(c.id)}">
               <span class="ticket-flag" aria-hidden="true">${flagEmoji(c.countryCode)}</span>
               <span class="ticket-main"><span class="ticket-city">${esc(tripTitle(c))}</span><span class="ticket-meta">${c.name ? `${esc(c.city)}, ` : ''}${esc(countryName(c.countryCode, c.countryName))}, ${dateRange(c.arrival, c.departure)}</span>${clChip(c)}</span>
               <span class="ticket-when">${esc(countdown(c))}</span>
-            </button></li>`
+            </button>${isPast(c) ? mapToggle(c) : ''}</li>`
           )
           .join('')}</ul></div>`
       : '';
@@ -73,6 +73,14 @@ function renderList(cards) {
     : '';
   root.innerHTML = nudge + group(t('list.upcoming'), upcoming) + group(t('list.past'), past);
   root.querySelector('[data-backup]')?.addEventListener('click', openBackup);
+}
+
+/** Past trips only: a switch for whether the trip is shown on the map. */
+function mapToggle(c) {
+  return `<label class="ticket-map">
+    <input type="checkbox" role="switch" data-map-toggle="${esc(c.id)}"${c.hideOnMap ? '' : ' checked'}>
+    <span>${esc(t('list.showOnMap'))}</span>
+  </label>`;
 }
 
 /** "🧳 9/12" on a trip in the list, when it has a checklist. */
@@ -110,7 +118,7 @@ function render() {
   renderList(cards);
   renderChecklistsTab();
   renderWarning();
-  renderPins(cards);
+  renderPins(cards.filter(onMap));
   renderHome(getProfile().home);
   $('map-hint').textContent = t(cards.length ? 'hint.pins' : 'hint.empty');
 }
@@ -233,7 +241,7 @@ function initBackup() {
       refreshBackupSheet();
       render();
       renderAvatar();
-      fitAll(getCards());
+      fitAll(getCards().filter(onMap));
     } catch (err) {
       toast(err.message);
     }
@@ -339,7 +347,7 @@ function start() {
     const now = JSON.stringify([p.home?.lat, p.home?.lon]);
     if (now !== lastHome) {
       lastHome = now;
-      setTimeout(() => fitAll(getCards()), 50);
+      setTimeout(() => fitAll(getCards().filter(onMap)), 50);
     }
   });
   $('profile-btn').addEventListener('click', () => {
@@ -363,9 +371,21 @@ function start() {
     const tk = e.target.closest('.ticket');
     if (tk) openDetail(tk.dataset.id);
   });
+  $('trip-list').addEventListener('change', (e) => {
+    const id = e.target.dataset.mapToggle;
+    if (!id) return;
+    updateCard(id, { hideOnMap: e.target.checked ? undefined : true });
+    $('trip-list').querySelector(`[data-map-toggle="${CSS.escape(id)}"]`)?.focus(); // list was redrawn
+  });
   window.addEventListener('focus-card', (e) => {
+    const card = e.detail;
+    // "Show on map" for a past trip that was hidden from the map: show it again.
+    if (!onMap(card)) {
+      updateCard(card.id, { hideOnMap: undefined });
+      toast(t('map.shownAgain', { title: tripTitle(card) }));
+    }
     setView('map');
-    setTimeout(() => focusCard(e.detail), 50);
+    setTimeout(() => focusCard(card), 50);
   });
 
   // Closing a sheet steps back in history; keep the address in sync with the visible tab.
@@ -389,7 +409,7 @@ function start() {
     renderWarning({ opening: true });
     showWelcome();
   });
-  if (view === 'map') setTimeout(() => fitAll(getCards()), 100);
+  if (view === 'map') setTimeout(() => fitAll(getCards().filter(onMap)), 100);
 
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     navigator.serviceWorker.register('sw.js').catch((err) => console.warn('Service worker not registered', err));

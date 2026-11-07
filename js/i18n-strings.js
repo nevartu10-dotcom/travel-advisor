@@ -18,6 +18,8 @@ const EN = {
   'aria.addTrip': 'Add a trip',
   'tab.map': 'Map',
   'tab.list': 'Trips',
+  'list.showOnMap': 'Show on map',
+  'map.shownAgain': '{title} is shown on the map again.',
 
   'search.label': 'Search for an address or city',
   'search.placeholder': 'Search an address or city',

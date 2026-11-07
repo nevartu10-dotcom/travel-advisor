@@ -33,6 +33,11 @@ export function isPast(card) {
   return parse(card.departure) < todayLocal();
 }
 
+/** Upcoming and ongoing trips are always on the map; past trips unless hidden in the Trips tab. */
+export function onMap(card) {
+  return !isPast(card) || !card.hideOnMap;
+}
+
 export function isNow(card) {
   const today = todayLocal();
   return today >= parse(card.arrival) && today <= parse(card.departure);

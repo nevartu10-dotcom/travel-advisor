@@ -93,6 +93,7 @@ function cleanCard(c) {
   out.lat = Number(c.lat);
   out.lon = Number(c.lon);
   out.countryCode = out.countryCode.toUpperCase();
+  if (c.hideOnMap === true) out.hideOnMap = true;
   if (Array.isArray(c.checked)) out.checked = c.checked.filter((x) => typeof x === 'string').slice(0, 500).map((x) => x.slice(0, 80));
   if (!out.id) out.id = (crypto.randomUUID && crypto.randomUUID()) || String(Date.now()) + Math.random().toString(16).slice(2);
   return out;

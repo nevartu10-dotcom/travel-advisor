@@ -10,7 +10,8 @@ When the app opens, a short animation (under 2 seconds) shows the logo: a map pi
 
 ## What it does
 
-- **Two tabs:** trips as pins on a map, and trips as a list.
+- **Three tabs:** Map (trips as pins), Trips (the list, upcoming and past) and Checklists.
+- **Past trips on the map:** each past trip in the Trips tab has a *Show on map* switch (on by default). Upcoming and ongoing trips are always on the map. Pressing *Show on map* in a hidden trip's card turns it back on.
 - **Open a card** by tapping a pin or a list item.
 - **Add a trip** by typing an address or city in the search bar on the map, with the + button in the Trips tab, or by tapping a spot on the map. From search or a map tap, the place is filled in for you and only the dates are left.
 - Each trip needs a country, a city or address, and arrival and departure dates. You can also give it a name (e.g. "Family summer holiday"), now or later from the card; the name shows above the pin on the map and as the title in the list.
@@ -102,6 +103,7 @@ python3 tests/e2e_profile.py      # profile, languages, welcome, passport
 python3 tests/e2e_checklists.py   # checklists tab, card checklist, warning, backup
 python3 tests/e2e_splash.py       # name, icons, opening animation
 python3 tests/e2e_plugs.py        # older plug types, multi-adapter tip
+python3 tests/e2e_trips_map.py    # hide past trips from the map
 ```
 
 ## Project layout
