@@ -666,3 +666,6 @@ li.dragging .drag-handle { cursor: grabbing; color: var(--ink); }
 .ticket-map input:checked::after { transform: translateX(16px); }
 .ticket-map input:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .ticket-map:has(input:checked) { color: var(--ink); }
+
+.cl-order { margin: 10px 0 4px; }
+.cl-order .segmented span { min-height: 40px; font-size: var(--step--1); padding: 0 8px; text-align: center; }

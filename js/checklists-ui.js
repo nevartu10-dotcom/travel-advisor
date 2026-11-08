@@ -188,6 +188,33 @@ export function initChecklists() {
 
 /* ---------- Trip card section ---------- */
 
+// Card checklist order: 'list' = as in the checklist, 'open' = unticked items first.
+// Remembered on this device for all trips.
+const ORDER_KEY = 'travel-advisor.clOrder';
+function getOrder() {
+  try {
+    return localStorage.getItem(ORDER_KEY) === 'open' ? 'open' : 'list';
+  } catch {
+    return 'list';
+  }
+}
+function setOrder(v) {
+  try {
+    localStorage.setItem(ORDER_KEY, v);
+  } catch {}
+}
+
+function checkItems(list, ticked) {
+  const items = getOrder() === 'open'
+    ? [...list.items.filter((i) => !ticked.has(i.id)), ...list.items.filter((i) => ticked.has(i.id))] // keeps list order within each group
+    : list.items;
+  return items
+    .map((i) => `<li data-id="${esc(i.id)}">
+      <label class="cl-check"><input type="checkbox"${ticked.has(i.id) ? ' checked' : ''}><span>${esc(i.text)}</span></label>
+    </li>`)
+    .join('');
+}
+
 /** Checklist picker and tick boxes inside a trip card. Items are edited only in the Checklists tab. */
 export function renderCardChecklist(card, el) {
   const lists = getLists();
@@ -209,11 +236,15 @@ export function renderCardChecklist(card, el) {
     </label>
     ${list ? `
       <div class="cl-progress" aria-live="polite"><span id="d-cl-progress"></span><span class="cl-bar"><i id="d-cl-bar"></i></span></div>
-      <ul class="cl-checks">${list.items
-        .map((i) => `<li data-id="${esc(i.id)}">
-          <label class="cl-check"><input type="checkbox"${ticked.has(i.id) ? ' checked' : ''}><span>${esc(i.text)}</span></label>
-        </li>`)
-        .join('')}</ul>
+      ${list.items.length > 1 ? `
+      <fieldset class="segmented-field cl-order">
+        <legend class="visually-hidden">${esc(t('cl.order'))}</legend>
+        <div class="segmented" role="radiogroup">
+          <label><input type="radio" name="cl-order" value="list"${getOrder() === 'list' ? ' checked' : ''}><span>${esc(t('cl.orderList'))}</span></label>
+          <label><input type="radio" name="cl-order" value="open"${getOrder() === 'open' ? ' checked' : ''}><span>${esc(t('cl.orderOpen'))}</span></label>
+        </div>
+      </fieldset>` : ''}
+      <ul class="cl-checks">${checkItems(list, ticked)}</ul>
       ${list.items.length ? '' : `<p class="muted">${esc(t('cl.emptyList'))}</p>`}` : ''}`;
 
   const showProgress = () => {
@@ -230,7 +261,17 @@ export function renderCardChecklist(card, el) {
   });
   if (!list) return;
   showProgress();
-  el.querySelector('.cl-checks').addEventListener('change', (e) => {
+  const ul = el.querySelector('.cl-checks');
+  const redraw = (focusId) => {
+    ul.innerHTML = checkItems(getList(list.id), new Set(card.checked || []));
+    if (focusId) ul.querySelector(`li[data-id="${CSS.escape(focusId)}"] input`)?.focus({ preventScroll: true });
+  };
+  el.querySelector('.cl-order')?.addEventListener('change', (e) => {
+    setOrder(e.target.value);
+    redraw();
+  });
+  let moveTimer = 0;
+  ul.addEventListener('change', (e) => {
     const id = e.target.closest('li')?.dataset.id;
     if (!id) return;
     const set = new Set(card.checked || []);
@@ -239,6 +280,11 @@ export function renderCardChecklist(card, el) {
     card.checked = [...set];
     updateCard(card.id, { checked: card.checked });
     showProgress();
+    // Unticked first: let the tick show for a moment, then move the item.
+    if (getOrder() === 'open') {
+      clearTimeout(moveTimer);
+      moveTimer = setTimeout(() => redraw(id), 350);
+    }
   });
 }
 

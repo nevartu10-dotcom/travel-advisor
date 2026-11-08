@@ -54,6 +54,7 @@ The third tab, **Checklists**, holds your packing and to-do lists. A starter "Pa
 - **Copy** a list (copy icon, or Copy in the editor) to start a new one from it, e.g. "Winter holiday" from "Packing list".
 - **Delete** a list (bin icon, or Delete in the editor). If trips use it, the app says so first, and those trips are left without a checklist.
 - **In a trip card**, the Checklist section lets you pick which list the trip uses and tick items as you pack or get them done. Items are added, removed and reordered only in the Checklists tab. **Ticks belong to the trip**, so one list can be reused for many trips.
+- In the trip card you can show items in the **original order** or **unticked first** (ticked items move to the bottom, keeping the list's order within each group). The choice is remembered on the device.
 - The trips list shows progress (e.g. 🧳 9/12) for trips with a checklist.
 - **Warning:** when you open the app within 24 hours before a trip's arrival day (or on the arrival day itself) and its checklist has unticked items, a warning on the start page lists what's left, with a link straight to the checklist. Trips have dates but no departure time, so the 24 hours count from the start of the arrival day. Like the birthday greeting, it shows when you open the app; there are no push notifications.
 

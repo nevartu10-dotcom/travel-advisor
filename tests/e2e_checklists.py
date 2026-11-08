@@ -165,6 +165,21 @@ with sync_playwright() as p:
     check([x.strip() for x in pg.locator('.cl-checks li').all_inner_texts()] == order, 'card shows items and order from the tab')
     check(pg.inner_text('#d-cl-progress') == '1 of 3 done' and pg.locator('.cl-checks li', has_text='Laptop').locator('input').is_checked(),
           'ticks kept after editing the list')
+
+    # Order buttons: original order, or unticked items first
+    names = lambda: [x.strip() for x in pg.locator('.cl-checks li').all_inner_texts()]
+    check(pg.locator('.cl-order input[value="list"]').is_checked(), 'original order is the default')
+    pg.locator('.cl-order label', has_text='Unticked first').click()
+    check(names() == ['Presentation slides', 'Visa card', 'Laptop and charger'], f'unticked first {names()}')
+    pg.locator('.cl-checks li', has_text='Presentation').locator('input').check()
+    pg.wait_for_timeout(500)
+    check(names() == ['Visa card', 'Laptop and charger', 'Presentation slides'], f'ticked item moves down, list order kept within groups {names()}')
+    check(pg.evaluate("document.activeElement.closest('li')?.textContent.includes('Presentation')"), 'focus stays on the moved item')
+    check(pg.evaluate("localStorage.getItem('travel-advisor.clOrder')") == 'open', 'choice remembered')
+    pg.locator('.cl-order label', has_text='Original order').click()
+    check(names() == ['Laptop and charger', 'Presentation slides', 'Visa card'], f'back to original order {names()}')
+    pg.locator('.cl-checks li', has_text='Presentation').locator('input').uncheck()
+    check(pg.inner_text('#d-cl-progress') == '1 of 3 done', 'ticks unaffected by ordering')
     pg.locator('#d-checklist-sec').scroll_into_view_if_needed()
     shot(pg, 'c03-card.png')
     close_trip(pg)
