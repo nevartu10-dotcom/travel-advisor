@@ -383,8 +383,6 @@ main {
   position: sticky; top: 0; z-index: 5; justify-content: space-between;
   background: var(--chrome); color: var(--chrome-ink);
 }
-.bar-title { flex: 1; font-weight: 600; opacity: 0; transition: opacity 0.15s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.detail-bar.scrolled .bar-title { opacity: 1; }
 .detail-head { background: var(--chrome); color: var(--chrome-ink); position: relative; padding-bottom: 20px; }
 .detail-head::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 8px; background: var(--stripe); background-size: 32px 8px; }
 .detail-title { padding: 0 16px 8px; }
@@ -670,19 +668,28 @@ li.dragging .drag-handle { cursor: grabbing; color: var(--ink); }
 .cl-order { margin: 10px 0 4px; }
 .cl-order .segmented span { min-height: 40px; font-size: var(--step--1); padding: 0 8px; text-align: center; }
 
-/* Prepvoy logo in the top bars (same mark and wordmark as the opening animation) */
-.appbar-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.appbar-left .appbar-title {
-  padding-left: 12px; border-left: 1px solid rgb(238 242 246 / 0.3);
-  font-size: var(--step-0); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+/* Prepvoy logo, centred in every top bar (same mark and wordmark as the opening animation) */
+.appbar, .sheet-head { position: relative; }
+.brand {
+  position: absolute; left: 50%; bottom: 0; height: 52px; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 7px; line-height: 1; pointer-events: none;
 }
-.brand { display: inline-flex; align-items: center; gap: 6px; flex: none; line-height: 1; }
-.brand-mark { width: 17px; height: 23px; display: block; }
-.brand-word { font-weight: 800; font-size: 19px; letter-spacing: -0.02em; }
+.sheet-head .brand { height: 56px; color: var(--ink); }
+.brand-mark { width: 22px; height: 30px; display: block; }
+.brand-word { font-weight: 800; font-size: 24px; letter-spacing: -0.02em; }
 .brand-word span { color: var(--brand); }
-.sheet-head .brand { margin-left: auto; padding-right: 8px; color: var(--ink); }
 /* On the navy bars (main bar and trip card) the logo is white, as on the splash screen. */
 .appbar .brand, .sheet-head.detail-bar .brand { color: #fff; }
-.sheet-head.detail-bar .brand { margin-left: 0; padding-right: 0; }
-.detail-bar .bar-title { margin-left: 8px; }
-@media (max-width: 340px) { .appbar-left .appbar-title { display: none; } }
+/* Titles stay left of the logo: half the bar minus half the logo (about 66px) and the side padding. */
+.appbar-title {
+  max-width: calc(50% - 82px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: var(--step-0); font-weight: 600;
+}
+/* Page headers: close button and logo on the bar, the page title on its own line below. */
+.sheet-head:not(.detail-bar) { flex-wrap: wrap; padding-bottom: 8px; }
+.sheet-head:not(.detail-bar) h2 { order: 3; flex-basis: 100%; padding: 2px 8px 0; font-size: var(--step-2); font-weight: 800; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+.sheet-head .brand { top: var(--safe-t); bottom: auto; }
+@media (max-width: 360px) {
+  .brand-word { font-size: 20px; }
+  .appbar-title { display: none; } /* too narrow for both; the tabs show where you are */
+}

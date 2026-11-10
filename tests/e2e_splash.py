@@ -45,12 +45,16 @@ with sync_playwright() as p:
     check(pg.evaluate("() => fetch('icons/icon.svg').then(r => r.text())").count('stroke="#0abaff"') == 1, 'icon has the check-mark pin')
 
     # Logo on the top bars
+    b_ = pg.evaluate("() => { const b = document.querySelector('.appbar .brand').getBoundingClientRect(); const t = document.getElementById('appbar-title').getBoundingClientRect(); return [Math.round(b.left + b.width / 2), t.right <= b.left]; }")
+    check(abs(b_[0] - 195) <= 2 and b_[1], f'logo centred in the main bar, clear of the page title {b_}')
     check(pg.locator('.appbar .brand').get_attribute('aria-label') == 'Prepvoy' and pg.inner_text('.appbar .brand') == 'Prepvoy', 'logo in the main top bar')
     for sid in ['form-sheet', 'profile-sheet', 'backup-sheet', 'list-sheet']:
         check(pg.locator(f'#{sid} .sheet-head .brand').count() == 1, f'logo in the {sid} header')
     pg.evaluate("() => localStorage.setItem('travel-advisor.cards.v1', JSON.stringify([{id:'a',city:'Lisbon',region:'Lisboa',countryName:'Portugal',countryCode:'PT',lat:38.7,lon:-9.1,arrival:'2030-01-01',departure:'2030-01-05'}]))")
     pg.reload(); pg.click('.welcome-close'); pg.click('#tab-list'); pg.click('.ticket'); pg.wait_for_selector('#detail-sheet[open]')
     col = pg.evaluate("getComputedStyle(document.querySelector('#detail .detail-bar .brand')).color")
+    centre = pg.evaluate("() => { const r = document.querySelector('#detail .detail-bar .brand').getBoundingClientRect(); return Math.round(r.left + r.width / 2); }")
+    check(abs(centre - 195) <= 2, f'logo centred in the trip card bar ({centre})')
     check(col == 'rgb(255, 255, 255)', f'logo on the trip card bar is white on navy ({col})')
 
     ctx2 = b.new_context(viewport={'width': 390, 'height': 844}, service_workers='block', reduced_motion='reduce')

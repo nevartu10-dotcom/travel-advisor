@@ -87,7 +87,6 @@ export function openDetail(id, { focus } = {}) {
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
       </button>
       <span class="brand" aria-hidden="true"><svg class="brand-mark"><use href="#prepvoy-mark"/></svg><span class="brand-word">Prep<span>voy</span></span></span>
-      <span class="bar-title" aria-hidden="true">${esc(tripTitle(card))}</span>
       <button class="icon-btn" type="button" data-refresh aria-label="${esc(t('detail.refresh'))}">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6"/></svg>
       </button>
@@ -160,11 +159,6 @@ export function openDetail(id, { focus } = {}) {
       root.querySelectorAll('.trip-type button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.type === card.type)));
     })
   );
-
-  // Show the city name in the bar once the big title has scrolled away.
-  const bar = root.querySelector('.detail-bar');
-  new IntersectionObserver(([e]) => bar.classList.toggle('scrolled', !e.isIntersecting), { root, rootMargin: '-56px 0px 0px 0px' })
-    .observe(root.querySelector('#d-city'));
 
   openSheet(sheet()).then(() => {
     if (focus === 'checklist') keepInView(document.getElementById('d-checklist-sec'));
@@ -243,8 +237,6 @@ function renderName(card) {
          ${esc(t('name.add'))}
        </button>`;
   box.querySelector('.name-btn').addEventListener('click', () => editName(card));
-  const bar = document.querySelector('#detail .bar-title');
-  if (bar) bar.textContent = tripTitle(card);
 }
 
 function editName(card) {

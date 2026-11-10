@@ -18,7 +18,8 @@ import { esc, dateRange, countdown, isPast, isNow, toast, tripTitle, tripLabel, 
 const $ = (id) => document.getElementById(id);
 let view = 'map';
 const VIEWS = ['map', 'list', 'checklists'];
-const TITLES = { map: 'app.title.map', list: 'app.title.list', checklists: 'app.title.checklists' };
+// The bar shows the short tab names: the centred logo leaves room for about 110px of title.
+const TITLES = { map: 'tab.map', list: 'tab.list', checklists: 'bar.checklists' }; // Finnish uses a shorter word here
 
 applyStatic();
 seedIfNew();

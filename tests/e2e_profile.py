@@ -62,7 +62,7 @@ with sync_playwright() as p:
     pg.wait_for_selector('#welcome:not([hidden])')
     check(pg.inner_text('.welcome-hello') == 'Welcome!', 'generic welcome without a profile')
     check(pg.locator('.welcome-setup').count() == 1, 'welcome offers profile setup')
-    check(pg.inner_text('#appbar-title') == 'Trip map' and pg.inner_text('#tab-list') == 'Trips', 'English interface by default')
+    check(pg.inner_text('#appbar-title') == 'Map' and pg.inner_text('#tab-list') == 'Trips', 'English interface by default')
     shot(pg, 'p01-welcome-new.png')
 
     # Profile: invalid birth date, unknown address, then a valid profile
@@ -176,7 +176,7 @@ with sync_playwright() as p:
         pg.click('#p-save')
     pg.wait_for_selector('#welcome:not([hidden])')
     check(pg.evaluate('document.documentElement.lang') == 'fi', 'page language set to Finnish')
-    check(pg.inner_text('#appbar-title') in ('Matkakartta', 'Matkat') and pg.inner_text('#tab-list') == 'Matkat', f'interface in Finnish {pg.inner_text("#appbar-title")!r}')
+    check(pg.inner_text('#appbar-title') in ('Kartta', 'Matkat') and pg.inner_text('#tab-list') == 'Matkat', f'interface in Finnish {pg.inner_text("#appbar-title")!r}')
     check('Seuraava matkasi' in pg.inner_text('.welcome-line'), 'welcome line in Finnish')
     check(pg.inner_text('.home-label') == 'Koti', 'home label in Finnish')
     shot(pg, 'p04-map-fi.png')
@@ -198,9 +198,9 @@ with sync_playwright() as p:
     close_card(pg)
 
     # Every language renders the interface without missing text or errors
-    for code, title in [('fr', ('Carte des voyages', 'Voyages')), ('de', ('Reisekarte', 'Reisen')), ('nb', ('Reisekart', 'Reiser')),
-                        ('pt', ('Mapa de viagens', 'Viagens')), ('es', ('Mapa de viajes', 'Viajes')), ('sv', ('Resekarta', 'Resor')),
-                        ('en', ('Trip map', 'Trips'))]:
+    for code, title in [('fr', ('Carte', 'Voyages')), ('de', ('Karte', 'Reisen')), ('nb', ('Kart', 'Reiser')),
+                        ('pt', ('Mapa', 'Viagens')), ('es', ('Mapa', 'Viajes')), ('sv', ('Karta', 'Resor')),
+                        ('en', ('Map', 'Trips'))]:
         pg.evaluate(f"() => {{ const p = JSON.parse(localStorage.getItem('travel-advisor.profile.v1')); p.lang = '{code}'; localStorage.setItem('travel-advisor.profile.v1', JSON.stringify(p)); localStorage.setItem('travel-advisor.view', 'map'); }}")
         pg.goto(BASE + '#map'); pg.reload()
         pg.wait_for_selector('#welcome:not([hidden])')

@@ -269,6 +269,7 @@ const EN = {
   'welcome.setupText': 'Add your name and home address to get started.',
   'welcome.word': 'Welcome',
   'tab.checklists': 'Checklists',
+  'bar.checklists': 'Checklists',
   'app.title.checklists': 'Checklists',
   'aria.addChecklist': 'New checklist',
   'cl.empty.title': 'No checklists yet',
