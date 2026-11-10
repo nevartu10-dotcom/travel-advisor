@@ -10,6 +10,7 @@ When the app opens, a short animation (under 2 seconds) shows the logo: a map pi
 
 ## What it does
 
+- **Built-in help:** press **?** in the top-left corner of any screen (the tabs, a trip card, and the profile, backup, new trip and checklist pages). Each function gets a blue ring and a speech bubble explaining it. Bubbles follow while you scroll, so a trip card explains each section as you reach it. Where a bubble doesn't fit without covering something, the ring gets a small **?** badge; tap it to read. Press ? again, tap *Close help*, press Escape or change screen to close.
 - **Three tabs:** Map (trips as pins), Trips (the list, upcoming and past) and Checklists.
 - **Past trips on the map:** each past trip in the Trips tab has a *Show on map* switch (on by default). Upcoming and ongoing trips are always on the map. Pressing *Show on map* in a hidden trip's card turns it back on.
 - **Open a card** by tapping a pin or a list item.
@@ -105,6 +106,7 @@ python3 tests/e2e_checklists.py   # checklists tab, card checklist, warning, bac
 python3 tests/e2e_splash.py       # name, icons, opening animation
 python3 tests/e2e_plugs.py        # older plug types, multi-adapter tip
 python3 tests/e2e_trips_map.py    # hide past trips from the map
+python3 tests/e2e_help.py         # ? help bubbles on every screen
 ```
 
 ## Project layout

@@ -11,6 +11,7 @@ import { initProfile, openProfile } from './profile-ui.js';
 import { getProfile, hasProfile, homeWelcome, homeBirthday, isBirthday, ageOn, onProfileChange } from './profile.js';
 import { birthdayGreeting } from './data/birthday.js';
 import { seedIfNew, onListsChange, progress } from './checklists.js';
+import { initHelp } from './help.js';
 import { initChecklists, renderChecklistsTab, warningLines } from './checklists-ui.js';
 import { flagEmoji } from './api/country.js';
 import { esc, dateRange, countdown, isPast, isNow, toast, tripTitle, tripLabel, openSheet, closeSheet, onMap } from './ui.js';
@@ -324,6 +325,7 @@ function start() {
   initDetail({ deleted: (card) => toast(t('toast.deleted', { title: tripLabel(card) })) });
   initBackup();
   initChecklists();
+  initHelp();
   onListsChange(render);
   window.addEventListener('show-checklists', () => {
     closeSheet($('detail-sheet'));

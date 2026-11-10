@@ -680,16 +680,54 @@ li.dragging .drag-handle { cursor: grabbing; color: var(--ink); }
 .brand-word span { color: var(--brand); }
 /* On the navy bars (main bar and trip card) the logo is white, as on the splash screen. */
 .appbar .brand, .sheet-head.detail-bar .brand { color: #fff; }
-/* Titles stay left of the logo: half the bar minus half the logo (about 66px) and the side padding. */
-.appbar-title {
-  max-width: calc(50% - 82px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  font-size: var(--step-0); font-weight: 600;
-}
+/* The main bar shows the help button and the logo; the page title is for screen readers (the tabs show the page). */
 /* Page headers: close button and logo on the bar, the page title on its own line below. */
 .sheet-head:not(.detail-bar) { flex-wrap: wrap; padding-bottom: 8px; }
 .sheet-head:not(.detail-bar) h2 { order: 3; flex-basis: 100%; padding: 2px 8px 0; font-size: var(--step-2); font-weight: 800; letter-spacing: -0.01em; overflow-wrap: anywhere; }
 .sheet-head .brand { top: var(--safe-t); bottom: auto; }
-@media (max-width: 360px) {
-  .brand-word { font-size: 20px; }
-  .appbar-title { display: none; } /* too narrow for both; the tabs show where you are */
+@media (max-width: 360px) { .brand-word { font-size: 20px; } }
+
+/* ---------- Built-in help: "?" button, rings and speech bubbles ---------- */
+.help-btn[aria-pressed="true"] { background: var(--brand); color: #14213d; border-radius: 50%; }
+.appbar .help-btn { margin-left: -8px; }
+.appbar { justify-content: flex-start; }
+.appbar-actions { margin-left: auto; }
+.help-layer { position: fixed; inset: 0; z-index: 3000; pointer-events: none; }
+.help-ring {
+  position: fixed; border: 2px solid var(--brand); border-radius: 8px; pointer-events: none;
+  box-shadow: 0 0 0 3px rgb(10 186 255 / 0.25);
 }
+.help-bubble {
+  position: fixed; max-width: min(230px, calc(100vw - 16px)); padding: 9px 12px; border-radius: 10px;
+  background: var(--brand); color: #14213d; font-size: 14px; font-weight: 500; line-height: 1.35;
+  box-shadow: 0 6px 18px rgb(13 20 36 / 0.3); animation: help-in 0.18s ease-out;
+}
+.help-bubble.up::before, .help-bubble.down::before {
+  content: ''; position: absolute; left: calc(var(--ax) - 8px); width: 0; height: 0;
+  border: 8px solid transparent;
+}
+.help-bubble.up::before { top: -16px; border-bottom-color: var(--brand); }
+.help-bubble.left::before, .help-bubble.right::before {
+  content: ''; position: absolute; top: calc(var(--ay) - 8px); width: 0; height: 0; border: 8px solid transparent;
+}
+.help-bubble.left::before { right: -16px; border-left-color: var(--brand); }
+.help-bubble.right::before { left: -16px; border-right-color: var(--brand); }
+.help-leader { position: fixed; width: 2px; background: var(--brand); pointer-events: none; }
+body.help-open .map-hint { visibility: hidden; }
+.help-bubble.down::before { bottom: -16px; border-top-color: var(--brand); }
+.help-close {
+  position: fixed; left: 12px; bottom: calc(16px + var(--safe-b)); pointer-events: auto;
+  display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 18px; border: 0; border-radius: 999px; cursor: pointer;
+  background: #14213d; color: #fff; font: inherit; font-weight: 600; box-shadow: 0 6px 18px rgb(13 20 36 / 0.35);
+}
+.help-close svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; }
+@keyframes help-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.detail-bar { justify-content: flex-start; }
+.detail-bar [data-refresh] { margin-left: auto; }
+
+.help-badge {
+  position: fixed; width: 24px; height: 24px; padding: 0; border-radius: 50%; border: 2px solid #fff; pointer-events: auto; cursor: pointer;
+  background: var(--brand); color: #14213d; font: 800 14px/20px var(--font); text-align: center; box-shadow: 0 2px 6px rgb(13 20 36 / 0.35);
+}
+.help-badge::after { content: ''; position: absolute; inset: -10px; } /* bigger tap area */
+.help-bubble.focused { box-shadow: 0 0 0 3px #fff, 0 6px 18px rgb(13 20 36 / 0.35); }

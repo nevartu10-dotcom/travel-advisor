@@ -86,6 +86,7 @@ export function openDetail(id, { focus } = {}) {
       <button class="icon-btn" type="button" data-close aria-label="${esc(t('close'))}">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
       </button>
+      <button class="icon-btn help-btn" type="button" aria-pressed="false" aria-label="${esc(t('help.button'))}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.6 2.3c-.7.4-1.2.9-1.2 1.7v.4"/><path d="M12 16.9v.2" stroke-width="2.6"/></svg></button>
       <span class="brand" aria-hidden="true"><svg class="brand-mark"><use href="#prepvoy-mark"/></svg><span class="brand-word">Prep<span>voy</span></span></span>
       <button class="icon-btn" type="button" data-refresh aria-label="${esc(t('detail.refresh'))}">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6"/></svg>
