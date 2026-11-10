@@ -18,6 +18,13 @@
   <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="prepvoy-mark" viewBox="14 14 132 180">
+      <path d="M80 188c-16-24-62-64-62-108a62 62 0 0 1 124 0c0 44-46 84-62 108Z" fill="currentColor"/>
+      <path d="M52 82l20 20 36-38" fill="none" stroke="#0abaff" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+  </svg>
+
   <!-- Opening animation: shown once per app session; app.js removes it when it ends. -->
   <div class="splash" id="splash" aria-hidden="true">
     <div class="splash-inner">
@@ -34,7 +41,10 @@
   </div>
   <script>try { if (sessionStorage.getItem('prepvoy.splash')) document.getElementById('splash').remove(); else sessionStorage.setItem('prepvoy.splash', '1'); } catch (e) {}</script>
   <header class="appbar">
-    <h1 class="appbar-title" id="appbar-title"></h1>
+    <span class="appbar-left">
+      <span class="brand" role="img" aria-label="Prepvoy"><svg class="brand-mark" aria-hidden="true"><use href="#prepvoy-mark"/></svg><span class="brand-word" aria-hidden="true">Prep<span>voy</span></span></span>
+      <h1 class="appbar-title" id="appbar-title"></h1>
+    </span>
     <span class="appbar-actions">
       <span class="appbar-status" id="net-status" data-i18n="offline" hidden></span>
       <button class="icon-btn" id="backup-btn" type="button" data-i18n-aria="aria.backup">
@@ -105,6 +115,7 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
         </button>
         <h2 id="form-title" data-i18n="form.title"></h2>
+        <span class="brand" aria-hidden="true"><svg class="brand-mark"><use href="#prepvoy-mark"/></svg><span class="brand-word">Prep<span>voy</span></span></span>
       </div>
       <div class="sheet-body form-body">
         <label class="field">
@@ -159,6 +170,7 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
         </button>
         <h2 id="list-title" data-i18n="cl.editTitle"></h2>
+        <span class="brand" aria-hidden="true"><svg class="brand-mark"><use href="#prepvoy-mark"/></svg><span class="brand-word">Prep<span>voy</span></span></span>
       </div>
       <div class="sheet-body form-body" id="list-body"></div>
       <div class="sheet-foot">
@@ -175,6 +187,7 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
         </button>
         <h2 id="profile-title" data-i18n="profile.title"></h2>
+        <span class="brand" aria-hidden="true"><svg class="brand-mark"><use href="#prepvoy-mark"/></svg><span class="brand-word">Prep<span>voy</span></span></span>
       </div>
       <div class="sheet-body form-body profile-body">
         <p class="muted" data-i18n="profile.intro"></p>
@@ -239,6 +252,7 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
         </button>
         <h2 id="backup-title" data-i18n="backup.title"></h2>
+        <span class="brand" aria-hidden="true"><svg class="brand-mark"><use href="#prepvoy-mark"/></svg><span class="brand-word">Prep<span>voy</span></span></span>
       </div>
       <div class="sheet-body backup-body">
         <p data-i18n-html="backup.intro"></p>

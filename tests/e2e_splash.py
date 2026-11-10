@@ -44,7 +44,15 @@ with sync_playwright() as p:
     check(man['name'] == 'Prepvoy' and man['short_name'] == 'Prepvoy', 'install name is Prepvoy')
     check(pg.evaluate("() => fetch('icons/icon.svg').then(r => r.text())").count('stroke="#0abaff"') == 1, 'icon has the check-mark pin')
 
-    # Reduced motion: shorter, no movement
+    # Logo on the top bars
+    check(pg.locator('.appbar .brand').get_attribute('aria-label') == 'Prepvoy' and pg.inner_text('.appbar .brand') == 'Prepvoy', 'logo in the main top bar')
+    for sid in ['form-sheet', 'profile-sheet', 'backup-sheet', 'list-sheet']:
+        check(pg.locator(f'#{sid} .sheet-head .brand').count() == 1, f'logo in the {sid} header')
+    pg.evaluate("() => localStorage.setItem('travel-advisor.cards.v1', JSON.stringify([{id:'a',city:'Lisbon',region:'Lisboa',countryName:'Portugal',countryCode:'PT',lat:38.7,lon:-9.1,arrival:'2030-01-01',departure:'2030-01-05'}]))")
+    pg.reload(); pg.click('.welcome-close'); pg.click('#tab-list'); pg.click('.ticket'); pg.wait_for_selector('#detail-sheet[open]')
+    col = pg.evaluate("getComputedStyle(document.querySelector('#detail .detail-bar .brand')).color")
+    check(col == 'rgb(255, 255, 255)', f'logo on the trip card bar is white on navy ({col})')
+
     ctx2 = b.new_context(viewport={'width': 390, 'height': 844}, service_workers='block', reduced_motion='reduce')
     ctx2.route('**/*', handler)
     pg2 = ctx2.new_page(); pg2.goto(BASE)
